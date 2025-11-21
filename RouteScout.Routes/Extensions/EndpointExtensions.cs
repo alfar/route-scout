@@ -47,6 +47,23 @@ namespace RouteScout.Routes.Extensions
                 return Results.NoContent();
             });
 
+            app.MapPost("/stops/{id:guid}/unassign", async (IDocumentSession session, Guid id) =>
+            {
+                var stop = await session.LoadAsync<StopSummary>(id);
+                if (stop is null) return Results.NotFound();
+
+                if (stop.RouteId.HasValue)
+                {
+                    var evt = new StopRemovedFromRoute(stop.RouteId.Value, id);
+                    session.Events.Append(stop.RouteId.Value, evt);
+                    session.Events.Append(id, new StopUnassignedFromRoute(id, stop.RouteId.Value));
+                    await session.SaveChangesAsync();
+                }
+
+                return Results.NoContent();
+            });
+
+
             // Routes Endpoints
 
             app.MapGet("/routes", async (IDocumentSession session) =>

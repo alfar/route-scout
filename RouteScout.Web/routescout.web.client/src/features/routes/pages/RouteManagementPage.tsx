@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { DndContext, DragOverlay } from '@dnd-kit/core';
 import RouteList from '../components/RouteList';
 import UnassignedStopList from '../components/UnassignedStopList';
 import AssignStopForm from '../components/AssignStopForm';
@@ -16,6 +17,7 @@ export interface StopSummary {
     id: string;
     addressId: string;
     streetId: string;
+    streetName: string;
     houseNumber: string;
     amount: number;
     routeId: string | null;
@@ -27,6 +29,8 @@ const RouteManagementPage: React.FC = () => {
     const [stops, setStops] = useState<StopSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [draggedStop, setDraggedStop] = useState<StopSummary | null>(null);
+    const [hoveredRouteId, setHoveredRouteId] = useState<string | null>(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -60,35 +64,76 @@ const RouteManagementPage: React.FC = () => {
         fetchData();
     };
 
-    const handleUnassign = async (routeId: string, stopId: string) => {
-        await fetch(`/api/routes/${routeId}/stops/${stopId}`, {
-            method: 'DELETE'
+    const handleUnassign = async (stopId: string) => {
+        await fetch(`/api/stops/${stopId}/unassign`, {
+            method: 'POST'
         });
         fetchData();
+    };
+
+    const handleDragStart = (event: any) => {
+        const stopId = event.active?.id;
+        if (stopId) {
+            const stop = stops.find(s => s.id === stopId);
+            setDraggedStop(stop || null);
+        }
+    };
+
+    const handleDragOver = (event: any) => {
+        setHoveredRouteId(event.over?.id || null);
+    };
+
+    const handleDragEnd = (event: any) => {
+        setDraggedStop(null);
+        const { active, over } = event;
+        if (active && over && active.id && over.id && active.id !== over.id) {
+            if (over.id === "unassign") {
+                handleUnassign(active.id)
+            }
+            // Assign stop to route
+            handleAssign(active.id, over.id);
+        }
     };
 
     const unassignedStops = stops.filter(s => !s.routeId && !s.deleted);
 
     return (
-        <div>
-            <h1 className="text-2xl font-bold mb-4">Route Management</h1>
-            <CreateRouteForm onCreated={fetchData} />
-            {error && <div className="text-red-600">{error}</div>}
-            {loading ? (
-                <div>Loading...</div>
-            ) : (
-                <div className="flex gap-8">
-                    <div className="flex-1">
-                        <h2 className="text-xl font-semibold mb-2">Routes</h2>
-                        <RouteList routes={routes} stops={stops} onUnassign={handleUnassign} />
+        <DndContext onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+            <div>
+                <h1 className="text-2xl font-bold mb-4">Route Management</h1>
+                <CreateRouteForm onCreated={fetchData} />
+                {error && <div className="text-red-600">{error}</div>}
+                {loading ? (
+                    <div>Loading...</div>
+                ) : (
+                    <div className="flex gap-8">
+                        <div className="flex-1">
+                            <h2 className="text-xl font-semibold mb-2">Routes</h2>
+                                <RouteList routes={routes} stops={stops} onUnassign={handleUnassign} hoveredRouteId={hoveredRouteId} />
+                        </div>
+                        <div className="flex-1">
+                            <h2 className="text-xl font-semibold mb-2">Unassigned Stops</h2>
+                                <UnassignedStopList stops={unassignedStops} />
+                        </div>
                     </div>
-                    <div className="flex-1">
-                        <h2 className="text-xl font-semibold mb-2">Unassigned Stops</h2>
-                        <UnassignedStopList stops={unassignedStops} routes={routes} onAssign={handleAssign} />
+                )}
+            </div>
+            <DragOverlay>
+                {draggedStop ? (
+                    <div
+                        style={{
+                            padding: '8px',
+                            border: '1px solid #60a5fa',
+                            background: '#e0f7fa',
+                            borderRadius: '4px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                        }}
+                    >
+                        {draggedStop.houseNumber} (#{draggedStop.id.slice(0, 6)})
                     </div>
-                </div>
-            )}
-        </div>
+                ) : null}
+            </DragOverlay>
+        </DndContext>
     );
 };
 

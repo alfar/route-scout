@@ -24,6 +24,15 @@ public class TeamSummary
         TrailerSize = e.TrailerSize;
         LeaderName = e.LeaderName;
         LeaderPhone = e.LeaderPhone;
-        Members = e.Members.ToList();
+    }
+
+    public void Apply(TeamMemberAdded e)
+    {
+        if (!Members.Contains(e.Member)) Members.Add(e.Member);
+    }
+
+    public void Apply(TeamMemberRemoved e)
+    {
+        Members.Remove(e.Member);
     }
 }

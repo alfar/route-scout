@@ -1,3 +1,4 @@
 namespace RouteScout.Teams.Dto;
 
-public record UpdateTeam(string TrailerSize, string LeaderName, string LeaderPhone, IReadOnlyList<string> Members);
+// Members removed from update; membership managed via separate add/remove endpoints
+public record UpdateTeam(string TrailerSize, string LeaderName, string LeaderPhone);

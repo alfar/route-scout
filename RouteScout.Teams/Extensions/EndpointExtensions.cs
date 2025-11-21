@@ -20,9 +20,25 @@ public static class EndpointExtensions
             return Results.Created($"/api/teams/{id}", new { id });
         });
 
+        // Update team metadata (not members)
         group.MapPut("/{id:guid}", async (Guid id, UpdateTeam dto, ITeamService service) =>
         {
-            await service.UpdateTeam(id, dto.TrailerSize, dto.LeaderName, dto.LeaderPhone, dto.Members);
+            await service.UpdateTeam(id, dto.TrailerSize, dto.LeaderName, dto.LeaderPhone);
+            return Results.NoContent();
+        });
+
+        // Add a member (expects raw string body or query param "member")
+        group.MapPost("/{id:guid}/members", async (Guid id, [AsParameters] MemberDto body, ITeamService service) =>
+        {
+            if (string.IsNullOrWhiteSpace(body.Member)) return Results.BadRequest("Member required");
+            await service.AddMember(id, body.Member);
+            return Results.Accepted();
+        });
+
+        // Remove a member
+        group.MapDelete("/{id:guid}/members/{member}", async (Guid id, string member, ITeamService service) =>
+        {
+            await service.RemoveMember(id, member);
             return Results.NoContent();
         });
 
@@ -44,3 +60,5 @@ public static class EndpointExtensions
         return app;
     }
 }
+
+public record MemberDto(string Member);

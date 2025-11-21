@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11205.157 d18.0
+VisualStudioVersion = 18.0.11205.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteScout.Payments", "RouteScout.Payments\RouteScout.Payments.csproj", "{5B760791-D0C3-4700-A477-50F7E17442AC}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteScout.AddressWashing", "RouteScout.AddressWashing\RouteScout.AddressWashing.csproj", "{641694CB-68A8-47B0-B27C-85B712CCDE5C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteScout.Routes", "RouteScout.Routes\RouteScout.Routes.csproj", "{3F7F7680-ED37-B46C-29B7-71567A33774C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteScout.Teams", "RouteScout.Teams\RouteScout.Teams.csproj", "{C39543A0-025A-C00A-F17D-6C60E911B754}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +43,10 @@ Global
 		{3F7F7680-ED37-B46C-29B7-71567A33774C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3F7F7680-ED37-B46C-29B7-71567A33774C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3F7F7680-ED37-B46C-29B7-71567A33774C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C39543A0-025A-C00A-F17D-6C60E911B754}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C39543A0-025A-C00A-F17D-6C60E911B754}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C39543A0-025A-C00A-F17D-6C60E911B754}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C39543A0-025A-C00A-F17D-6C60E911B754}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

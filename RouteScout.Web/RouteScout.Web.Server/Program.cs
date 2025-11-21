@@ -8,6 +8,7 @@ using RouteScout.Payments.Endpoints;
 using RouteScout.Payments.Extensions;
 using RouteScout.Payments.IntegrationPoints;
 using RouteScout.Routes.Extensions;
+using RouteScout.Teams.Extensions;
 using RouteScout.Web.Server.Integration.AddressWashing;
 using RouteScout.Web.Server.Integration.Payments;
 
@@ -21,6 +22,7 @@ var connectionString = builder.Configuration.GetConnectionString("RouteScoutDb")
 builder.Services.AddPayments();
 builder.Services.AddAddressWashing();
 builder.Services.AddRoutes();
+builder.Services.AddTeams();
 
 builder.Services.AddScoped<IAddressCandidateConfirmedHandler, AddressConfirmedAddStopHandler>();
 builder.Services.AddScoped<IAddressCandidateRejectedHandler, AddressRejectedPaymentResetHandler>();
@@ -38,6 +40,7 @@ builder.Services.AddMarten(opts =>
     opts.AddPaymentsEventTypesAndProjections();
     opts.AddAddressWashingEventTypesAndProjections();
     opts.AddRoutesEventTypesAndProjections();
+    opts.AddTeamsEventTypesAndProjections();
 
 }).UseLightweightSessions();
 
@@ -67,7 +70,8 @@ app.UseAuthorization();
 app.MapGroup("/api")
     .MapPaymentEndpoints()
     .MapAddressWashingEndpoints()
-    .MapRouteEndpoints();
+    .MapRouteEndpoints()
+    .MapTeamEndpoints();
 
 app.MapFallbackToFile("/index.html");
 

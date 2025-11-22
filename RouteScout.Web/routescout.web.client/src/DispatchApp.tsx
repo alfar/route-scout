@@ -6,6 +6,7 @@ import DashboardPage from './features/dashboard/pages/DashboardPage';
 import AddressWashingPage from './features/address-washing/pages/AddressWashingPage';
 import RouteManagementPage from './features/routes/pages/RouteManagementPage';
 import TeamsPage from './features/teams/pages/TeamsPage';
+import IssuesStream from './features/issues/components/IssuesStream';
 
 export function DispatchApp() {
   return (
@@ -18,7 +19,8 @@ export function DispatchApp() {
         <Link className="text-white font-semibold hover:underline" to="/teams">Teams</Link>
         <Link className="text-white font-semibold hover:underline" to="/about">About</Link>
       </nav>
-      <main className="p-8">
+      <main className="p-8 flex flex-col gap-6">
+        <IssuesStream />
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/payments" element={<PaymentsPage />} />

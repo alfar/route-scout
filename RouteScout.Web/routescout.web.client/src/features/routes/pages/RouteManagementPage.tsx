@@ -14,6 +14,7 @@ export interface RouteSummary {
     stops: string[];
     deleted: boolean;
     teamId?: string | null;
+    extraTrees?: number; // added
 }
 
 export interface StopSummary {
@@ -25,6 +26,7 @@ export interface StopSummary {
     amount: number;
     routeId: string | null;
     deleted: boolean;
+    status: number; // 0 Pending, 1 Completed, 2 NotFound
 }
 
 const RouteManagementPage: React.FC = () => {

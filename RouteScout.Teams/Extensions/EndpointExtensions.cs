@@ -1,5 +1,4 @@
 using Marten;
-using Microsoft.AspNetCore.Http.HttpResults;
 using RouteScout.Teams.Dto;
 using RouteScout.Teams.Projections;
 using RouteScout.Teams.Services;
@@ -10,7 +9,7 @@ public static class EndpointExtensions
 {
     public static IEndpointRouteBuilder MapTeamEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("teams");
+        var group = app.MapGroup("teams").WithTags("Teams");
 
         group.MapPost("/", async (CreateTeam dto, ITeamService service, IQuerySession query) =>
         {

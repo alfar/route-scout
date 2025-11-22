@@ -14,6 +14,9 @@ namespace RouteScout.Routes.Extensions
             opts.Events.AddEventType<StopAssignedToRoute>();
             opts.Events.AddEventType<StopUnassignedFromRoute>();
             opts.Events.AddEventType<StopDeleted>();
+            opts.Events.AddEventType<StopCompleted>();
+            opts.Events.AddEventType<StopNotFound>();
+            opts.Events.AddEventType<StopReset>();
 
             // Register Route events
             opts.Events.AddEventType<RouteCreated>();
@@ -26,6 +29,8 @@ namespace RouteScout.Routes.Extensions
             opts.Events.AddEventType<RouteDeleted>();
             opts.Events.AddEventType<RouteAssignedToTeam>(); // added
             opts.Events.AddEventType<RouteUnassignedFromTeam>(); // added
+            opts.Events.AddEventType<RouteExtraTreesAdded>();
+            opts.Events.AddEventType<RouteExtraTreesRemoved>();
 
             // Register projections as snapshots
             opts.Projections.Snapshot<StopSummary>(SnapshotLifecycle.Inline);

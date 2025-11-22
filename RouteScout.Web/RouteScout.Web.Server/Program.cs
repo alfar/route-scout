@@ -4,6 +4,7 @@ using Marten;
 using Microsoft.Extensions.Options;
 using RouteScout.AddressWashing.Extensions;
 using RouteScout.AddressWashing.IntegrationPoints;
+using RouteScout.Issues.Extensions;
 using RouteScout.Payments.Endpoints;
 using RouteScout.Payments.Extensions;
 using RouteScout.Payments.IntegrationPoints;
@@ -19,8 +20,9 @@ var connectionString = builder.Configuration.GetConnectionString("RouteScoutDb")
     ?? "Host=localhost;Database=routescout;Username=postgres;Password=postgres";
 
 // Add services to the container.
-builder.Services.AddPayments();
 builder.Services.AddAddressWashing();
+builder.Services.AddIssues();
+builder.Services.AddPayments();
 builder.Services.AddRoutes();
 builder.Services.AddTeams();
 
@@ -37,8 +39,9 @@ builder.Services.AddMarten(opts =>
     opts.Events.DatabaseSchemaName = "routescout";
 
     // Register event types and projections
-    opts.AddPaymentsEventTypesAndProjections();
     opts.AddAddressWashingEventTypesAndProjections();
+    opts.AddIssuesEventTypesAndProjections();
+    opts.AddPaymentsEventTypesAndProjections();
     opts.AddRoutesEventTypesAndProjections();
     opts.AddTeamsEventTypesAndProjections();
 
@@ -68,8 +71,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapGroup("/api")
-    .MapPaymentEndpoints()
     .MapAddressWashingEndpoints()
+    .MapIssueEndpoints()
+    .MapPaymentEndpoints()
     .MapRouteEndpoints()
     .MapTeamEndpoints();
 

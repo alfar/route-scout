@@ -12,6 +12,7 @@ public class Route
     public bool Deleted { get; set; } = false;
     public Guid? TeamId { get; set; } // assigned team
     public List<RouteStopDetail> StopDetails { get; set; } = new(); // optional detailed view
+    public int ExtraTrees { get; set; } // additional trees picked up outside planned stops
 
     // Apply methods for event sourcing
     public void Apply(RouteCreated e)
@@ -23,6 +24,7 @@ public class Route
         StopDetails = new List<RouteStopDetail>();
         Deleted = false;
         TeamId = null;
+        ExtraTrees = 0;
     }
 
     public void Apply(RouteRenamed e)
@@ -83,6 +85,16 @@ public class Route
     public void Apply(RouteUnassignedFromTeam e)
     {
         if (TeamId == e.TeamId) TeamId = null;
+    }
+
+    public void Apply(RouteExtraTreesAdded e)
+    {
+        ExtraTrees += e.Amount;
+    }
+
+    public void Apply(RouteExtraTreesRemoved e)
+    {
+        ExtraTrees -= e.Amount;
     }
 }
 

@@ -12,6 +12,7 @@ namespace RouteScout.Routes.Projections
         public int Amount { get; set; }
         public Guid? RouteId { get; set; }
         public bool Deleted { get; set; }
+        public StopStatus Status { get; set; }
 
         public static StopSummary Create(StopCreated e) => new()
         {
@@ -22,7 +23,8 @@ namespace RouteScout.Routes.Projections
             HouseNumber = e.HouseNumber,
             Amount = e.Amount,
             RouteId = null,
-            Deleted = false
+            Deleted = false,
+            Status = StopStatus.Pending
         };
 
         public void Apply(StopAssignedToRoute e)
@@ -39,5 +41,27 @@ namespace RouteScout.Routes.Projections
         {
             Deleted = true;
         }
+
+        public void Apply(StopCompleted e)
+        {
+            Status = StopStatus.Completed;
+        }
+
+        public void Apply(StopNotFound e)
+        {
+            Status = StopStatus.NotFound;
+        }
+
+        public void Apply(StopReset e)
+        {
+            Status = StopStatus.Pending;
+        }
+    }
+
+    public enum StopStatus
+    {
+        Pending = 0,
+        Completed = 1,
+        NotFound = 2
     }
 }

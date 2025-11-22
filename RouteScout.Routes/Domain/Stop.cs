@@ -13,6 +13,7 @@ public class Stop
     public int Amount { get; set; }
     public Guid? RouteId { get; set; }
     public bool Deleted { get; set; } = false;
+    public StopStatus Status { get; set; } = StopStatus.Pending;
 
     // Apply methods for event sourcing
     public void Apply(StopCreated e)
@@ -25,6 +26,7 @@ public class Stop
         Amount = e.Amount;
         RouteId = null;
         Deleted = false;
+        Status = StopStatus.Pending;
     }
 
     public void Apply(StopAssignedToRoute e)
@@ -41,4 +43,26 @@ public class Stop
     {
         Deleted = true;
     }
+
+    public void Apply(StopCompleted e)
+    {
+        Status = StopStatus.Completed;
+    }
+
+    public void Apply(StopNotFound e)
+    {
+        Status = StopStatus.NotFound;
+    }
+
+    public void Apply(StopReset e)
+    {
+        Status = StopStatus.Pending;
+    }
+}
+
+public enum StopStatus
+{
+    Pending = 0,
+    Completed = 1,
+    NotFound = 2
 }

@@ -6,12 +6,14 @@ public static class EndpointExtensions
 {
     public static IEndpointRouteBuilder MapAddressWashingEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/address-candidates", AddressWashingController.AddAddressTextAsync);
-        app.MapGet("/address-candidates", AddressWashingController.GetCandidatesAsync);
-        app.MapPost("/address-candidates/{id:guid}/wash", AddressWashingController.WashCandidateAsync);
-        app.MapPost("/address-candidates/{id:guid}/select/{addressId:guid}", AddressWashingController.ManualSelectAsync);
-        app.MapPost("/address-candidates/{id:guid}/reject", AddressWashingController.RejectAsync);
-        app.MapPost("/address-candidates/{id:guid}/confirm", AddressWashingController.ConfirmAsync);
+        var group = app.MapGroup("/address-candiates").WithTags("AddressWashing");
+
+        group.MapPost("", AddressWashingController.AddAddressTextAsync);
+        group.MapGet("", AddressWashingController.GetCandidatesAsync);
+        group.MapPost("/{id:guid}/wash", AddressWashingController.WashCandidateAsync);
+        group.MapPost("/{id:guid}/select/{addressId:guid}", AddressWashingController.ManualSelectAsync);
+        group.MapPost("/{id:guid}/reject", AddressWashingController.RejectAsync);
+        group.MapPost("/{id:guid}/confirm", AddressWashingController.ConfirmAsync);
 
         return app;
     }

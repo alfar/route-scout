@@ -9,29 +9,31 @@ namespace RouteScout.Routes.Extensions
     {
         public static IEndpointRouteBuilder MapRouteEndpoints(this IEndpointRouteBuilder app)
         {
+            var stopGroup = app.MapGroup("/stops").WithTags("Stops");
+
             // Stops Endpoints
-            app.MapGet("/stops", async (IDocumentSession session) =>
+            stopGroup.MapGet("", async (IDocumentSession session) =>
             {
                 var stops = await session.Query<StopSummary>().Where(s => !s.Deleted).ToListAsync();
                 return Results.Ok(stops);
             });
 
-            app.MapGet("/stops/{id:guid}", async (IDocumentSession session, Guid id) =>
+            stopGroup.MapGet("/{id:guid}", async (IDocumentSession session, Guid id) =>
             {
                 var stop = await session.LoadAsync<StopSummary>(id);
                 return stop is not null && !stop.Deleted ? Results.Ok(stop) : Results.NotFound();
             });
 
-            app.MapPost("/stops", async (IDocumentSession session, CreateStop dto) =>
+            stopGroup.MapPost("", async (IDocumentSession session, CreateStop dto) =>
             {
                 var stopId = Guid.NewGuid();
                 var evt = new StopCreated(stopId, dto.AddressId, dto.StreetId, dto.StreetName, dto.HouseNumber, dto.Amount);
                 session.Events.StartStream<Domain.Stop>(stopId, evt);
                 await session.SaveChangesAsync();
-                return Results.Created($"/stops/{stopId}", stopId);
+                return Results.Created($"/{stopId}", stopId);
             });
 
-            app.MapDelete("/stops/{id:guid}", async (IDocumentSession session, Guid id) =>
+            stopGroup.MapDelete("/{id:guid}", async (IDocumentSession session, Guid id) =>
             {
                 var stop = await session.LoadAsync<StopSummary>(id);
                 if (stop is null) return Results.NotFound();
@@ -47,7 +49,7 @@ namespace RouteScout.Routes.Extensions
                 return Results.NoContent();
             });
 
-            app.MapPost("/stops/{id:guid}/unassign", async (IDocumentSession session, Guid id) =>
+            stopGroup.MapPost("/{id:guid}/unassign", async (IDocumentSession session, Guid id) =>
             {
                 var stop = await session.LoadAsync<StopSummary>(id);
                 if (stop is null) return Results.NotFound();
@@ -63,23 +65,55 @@ namespace RouteScout.Routes.Extensions
                 return Results.NoContent();
             });
 
+            // Stop status endpoints
+            stopGroup.MapPost("/{id:guid}/complete", async (IDocumentSession session, Guid id) =>
+            {
+                var stop = await session.LoadAsync<StopSummary>(id);
+                if (stop is null || stop.Deleted) return Results.NotFound();
+                if (stop.Status == StopStatus.Completed) return Results.Ok(); // idempotent
+                session.Events.Append(id, new StopCompleted(id));
+                await session.SaveChangesAsync();
+                return Results.Ok();
+            });
+
+            stopGroup.MapPost("/{id:guid}/not-found", async (IDocumentSession session, Guid id) =>
+            {
+                var stop = await session.LoadAsync<StopSummary>(id);
+                if (stop is null || stop.Deleted) return Results.NotFound();
+                if (stop.Status == StopStatus.NotFound) return Results.Ok();
+                session.Events.Append(id, new StopNotFound(id));
+                await session.SaveChangesAsync();
+                return Results.Ok();
+            });
+
+            stopGroup.MapPost("/{id:guid}/reset", async (IDocumentSession session, Guid id) =>
+            {
+                var stop = await session.LoadAsync<StopSummary>(id);
+                if (stop is null || stop.Deleted) return Results.NotFound();
+                if (stop.Status == StopStatus.Pending) return Results.Ok();
+                session.Events.Append(id, new StopReset(id));
+                await session.SaveChangesAsync();
+                return Results.Ok();
+            });
+
 
             // Routes Endpoints
+            var routeGroup = app.MapGroup("/routes").WithTags("Routes");
 
-            app.MapGet("/routes", async (IDocumentSession session) =>
+            routeGroup.MapGet("", async (IDocumentSession session) =>
             {
                 var routes = await session.Query<RouteSummary>().Where(r => !r.Deleted).ToListAsync();
                 return Results.Ok(routes);
             });
 
-            app.MapGet("/routes/{id:guid}", async (IDocumentSession session, Guid id) =>
+            routeGroup.MapGet("/{id:guid}", async (IDocumentSession session, Guid id) =>
             {
                 var route = await session.LoadAsync<RouteSummary>(id);
                 return route is not null && !route.Deleted ? Results.Ok(route) : Results.NotFound();
             });
 
             // New: Get routes by team
-            app.MapGet("/routes/team/{teamId:guid}", async (IDocumentSession session, Guid teamId) =>
+            routeGroup.MapGet("/team/{teamId:guid}", async (IDocumentSession session, Guid teamId) =>
             {
                 var teamRoutes = await session.Query<RouteSummary>()
                     .Where(r => r.TeamId == teamId && !r.Deleted)
@@ -87,7 +121,7 @@ namespace RouteScout.Routes.Extensions
                 return Results.Ok(teamRoutes);
             });
 
-            app.MapPost("/routes", async (IDocumentSession session, CreateRoute dto) =>
+            routeGroup.MapPost("", async (IDocumentSession session, CreateRoute dto) =>
             {
                 var routeId = Guid.NewGuid();
                 var evt = new RouteCreated(routeId, dto.Name, dto.DropOffPoint);
@@ -96,7 +130,7 @@ namespace RouteScout.Routes.Extensions
                 return Results.Created($"/routes/{routeId}", routeId);
             });
 
-            app.MapDelete("/routes/{id:guid}", async (IDocumentSession session, Guid id) =>
+            routeGroup.MapDelete("/{id:guid}", async (IDocumentSession session, Guid id) =>
             {
                 var stops = await session.Query<StopSummary>().Where(s => s.RouteId == id && !s.Deleted).ToListAsync();
                 foreach (var stop in stops)
@@ -110,7 +144,7 @@ namespace RouteScout.Routes.Extensions
                 return Results.NoContent();
             });
 
-            app.MapPatch("/routes/{id:guid}/name", async (IDocumentSession session, Guid id, RenameRoute dto) =>
+            routeGroup.MapPatch("/{id:guid}/name", async (IDocumentSession session, Guid id, RenameRoute dto) =>
             {
                 var evt = new RouteRenamed(id, dto.NewName);
                 session.Events.Append(id, evt);
@@ -118,7 +152,7 @@ namespace RouteScout.Routes.Extensions
                 return Results.Ok();
             });
 
-            app.MapPatch("/routes/{id:guid}/dropoff-point", async (IDocumentSession session, Guid id, ChangeDropOffPoint dto) =>
+            routeGroup.MapPatch("/{id:guid}/dropoff-point", async (IDocumentSession session, Guid id, ChangeDropOffPoint dto) =>
             {
                 var evt = new RouteDropOffPointChanged(id, dto.NewDropOffPoint);
                 session.Events.Append(id, evt);
@@ -126,7 +160,7 @@ namespace RouteScout.Routes.Extensions
                 return Results.Ok();
             });
 
-            app.MapPatch("/routes/{routeId:guid}/stops/{stopId:guid}", async (IDocumentSession session, Guid routeId, Guid stopId, AddStopToRoute dto) =>
+            routeGroup.MapPatch("/{routeId:guid}/stops/{stopId:guid}", async (IDocumentSession session, Guid routeId, Guid stopId, AddStopToRoute dto) =>
             {
                 var stop = await session.LoadAsync<StopSummary>(stopId);
                 if (stop is null || stop.Deleted) return Results.NotFound();
@@ -141,7 +175,7 @@ namespace RouteScout.Routes.Extensions
                 return Results.Ok();
             });
 
-            app.MapDelete("/routes/{routeId:guid}/stops/{stopId:guid}", async (IDocumentSession session, Guid routeId, Guid stopId) =>
+            routeGroup.MapDelete("/{routeId:guid}/stops/{stopId:guid}", async (IDocumentSession session, Guid routeId, Guid stopId) =>
             {
                 var evt = new StopRemovedFromRoute(routeId, stopId);
                 session.Events.Append(routeId, evt);
@@ -153,7 +187,7 @@ namespace RouteScout.Routes.Extensions
                 return Results.NoContent();
             });
 
-            app.MapPost("/routes/{id:guid}/split", async (IDocumentSession session, Guid id, SplitRoute dto) =>
+            routeGroup.MapPost("/{id:guid}/split", async (IDocumentSession session, Guid id, SplitRoute dto) =>
             {
                 var newRouteId1 = Guid.NewGuid();
                 var newRouteId2 = Guid.NewGuid();
@@ -182,7 +216,7 @@ namespace RouteScout.Routes.Extensions
                 return Results.Ok();
             });
 
-            app.MapPost("/routes/{id:guid}/merge", async (IDocumentSession session, Guid id, MergeRoute dto) =>
+            routeGroup.MapPost("/{id:guid}/merge", async (IDocumentSession session, Guid id, MergeRoute dto) =>
             {
                 var sourceRoute = await session.LoadAsync<Domain.Route>(id);
                 if (sourceRoute is null) return Results.NotFound();
@@ -203,7 +237,7 @@ namespace RouteScout.Routes.Extensions
             });
 
             // Assign/unassign route to team endpoints
-            app.MapPost("/routes/{id:guid}/assign-team/{teamId:guid}", async (IDocumentSession session, Guid id, Guid teamId) =>
+            routeGroup.MapPost("/{id:guid}/assign-team/{teamId:guid}", async (IDocumentSession session, Guid id, Guid teamId) =>
             {
                 var route = await session.LoadAsync<RouteSummary>(id);
                 if (route is null || route.Deleted) return Results.NotFound();
@@ -212,11 +246,33 @@ namespace RouteScout.Routes.Extensions
                 return Results.Ok();
             });
 
-            app.MapPost("/routes/{id:guid}/unassign-team", async (IDocumentSession session, Guid id) =>
+            routeGroup.MapPost("/{id:guid}/unassign-team", async (IDocumentSession session, Guid id) =>
             {
                 var route = await session.LoadAsync<RouteSummary>(id);
                 if (route is null || route.Deleted || route.TeamId is null) return Results.NotFound();
                 session.Events.Append(id, new RouteUnassignedFromTeam(id, route.TeamId.Value));
+                await session.SaveChangesAsync();
+                return Results.Ok();
+            });
+
+            // Extra trees endpoints
+            routeGroup.MapPost("/{id:guid}/extra-trees/add/{amount:int}", async (IDocumentSession session, Guid id, int amount) =>
+            {
+                if (amount <= 0) return Results.BadRequest("Amount must be positive");
+                var route = await session.LoadAsync<RouteSummary>(id);
+                if (route is null || route.Deleted) return Results.NotFound();
+                session.Events.Append(id, new RouteExtraTreesAdded(id, amount));
+                await session.SaveChangesAsync();
+                return Results.Ok();
+            });
+
+            routeGroup.MapPost("/{id:guid}/extra-trees/remove/{amount:int}", async (IDocumentSession session, Guid id, int amount) =>
+            {
+                if (amount <= 0) return Results.BadRequest("Amount must be positive");
+                var route = await session.LoadAsync<RouteSummary>(id);
+                if (route is null || route.Deleted) return Results.NotFound();
+                if (route.ExtraTrees - amount < 0) return Results.BadRequest("Cannot reduce below zero");
+                session.Events.Append(id, new RouteExtraTreesRemoved(id, amount));
                 await session.SaveChangesAsync();
                 return Results.Ok();
             });

@@ -11,6 +11,7 @@ namespace RouteScout.Routes.Projections
         public List<RouteStopDetail> StopDetails { get; set; } = new(); // new detailed list
         public bool Deleted { get; set; }
         public Guid? TeamId { get; set; } // assigned team
+        public int ExtraTrees { get; set; }
 
         public static RouteSummary Create(RouteCreated e) => new()
         {
@@ -20,7 +21,8 @@ namespace RouteScout.Routes.Projections
             Stops = new List<Guid>(),
             StopDetails = new List<RouteStopDetail>(),
             Deleted = false,
-            TeamId = null
+            TeamId = null,
+            ExtraTrees = 0
         };
 
         public void Apply(RouteRenamed e) => Name = e.NewName;
@@ -60,6 +62,16 @@ namespace RouteScout.Routes.Projections
         public void Apply(RouteUnassignedFromTeam e)
         {
             if (TeamId == e.TeamId) TeamId = null;
+        }
+
+        public void Apply(RouteExtraTreesAdded e)
+        {
+            ExtraTrees += e.Amount;
+        }
+
+        public void Apply(RouteExtraTreesRemoved e)
+        {
+            ExtraTrees -= e.Amount;
         }
     }
 

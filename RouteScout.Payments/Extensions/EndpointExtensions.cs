@@ -9,7 +9,9 @@ public static class EndpointExtensions
 {
     public static IEndpointRouteBuilder MapPaymentEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/payments/import", async (HttpRequest request, PaymentService service) =>
+        var group = app.MapGroup("/payments").WithTags("Payments");
+
+        group.MapPost("/import", async (HttpRequest request, PaymentService service) =>
         {
             var file = request.Form.Files.GetFile("file");
             if (file is null)
@@ -20,7 +22,7 @@ public static class EndpointExtensions
             return Results.Ok("CSV processed");
         });
 
-        app.MapPost("/payments/{id}/confirm", async (Guid id, IDocumentSession session, IEnumerable<IPaymentConfirmedHandler> paymentConfirmedHandlers) =>
+        group.MapPost("/{id}/confirm", async (Guid id, IDocumentSession session, IEnumerable<IPaymentConfirmedHandler> paymentConfirmedHandlers) =>
         {
             var payment = await session.Events.AggregateStreamAsync<Payment>(id);
             if (payment is null)
@@ -40,7 +42,7 @@ public static class EndpointExtensions
             return Results.Ok("Payment confirmed");
         });
 
-        app.MapPost("/payments/{id}/reject", async (Guid id, IDocumentSession session) =>
+        group.MapPost("/{id}/reject", async (Guid id, IDocumentSession session) =>
         {
             var payment = await session.Events.AggregateStreamAsync<Payment>(id);
             if (payment is null)
@@ -55,7 +57,7 @@ public static class EndpointExtensions
             return Results.Ok("Payment rejected");
         });
 
-        app.MapGet("/payments", async (IDocumentSession session) =>
+        group.MapGet("/", async (IDocumentSession session) =>
         {
             var payments = await session.Query<PaymentSummary>().Where(p => !p.Confirmed && !p.Rejected && p.OriginalId == Guid.Empty).ToListAsync();
             return Results.Ok(payments);

@@ -7,7 +7,7 @@ function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/teams/:id" element={<TeamApp />} />
+                <Route path="/teams/:id/*" element={<TeamApp />} />
                 <Route path="*" element={<DispatchApp />} />
             </Routes>
         </Router>

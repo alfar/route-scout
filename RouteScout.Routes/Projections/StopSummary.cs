@@ -7,7 +7,7 @@ namespace RouteScout.Routes.Projections
         public Guid Id { get; set; }
         public Guid AddressId { get; set; }
         public Guid StreetId { get; set; }
-        public string StreetName { get; set; }
+        public string StreetName { get; set; } = string.Empty;
         public string HouseNumber { get; set; } = string.Empty;
         public int Amount { get; set; }
         public Guid? RouteId { get; set; }

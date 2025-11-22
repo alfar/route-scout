@@ -5,10 +5,11 @@ import { RouteSummary } from '../pages/RouteManagementPage';
 interface DroppableRouteProps {
     route: RouteSummary;
     children?: React.ReactNode;
+    isOver?: boolean;
 }
 
-const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, children }) => {
-    const { setNodeRef, isOver } = useDroppable({ id: route.id });
+const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, children, isOver }) => {
+    const { setNodeRef } = useDroppable({ id: route.id });
     return (
         <div
             ref={setNodeRef}

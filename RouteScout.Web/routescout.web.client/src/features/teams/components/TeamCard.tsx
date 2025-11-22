@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { TeamSummary } from '../types/TeamSummary';
+import QRCode from 'react-qr-code';
 
 interface Props {
   team: TeamSummary;
@@ -15,6 +16,9 @@ export function TeamCard({ team, onChanged, trailerSizes }: Props) {
   const [name, setName] = useState(team.name);
   const [memberToAdd, setMemberToAdd] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+
+  const teamUrl = `${window.location.origin}/teams/${team.id}`;
 
   async function saveEdit() {
     setSaving(true);
@@ -50,7 +54,17 @@ export function TeamCard({ team, onChanged, trailerSizes }: Props) {
   }
 
   return (
-    <div className="border rounded p-4 shadow-sm">
+    <div className="border rounded p-4 shadow-sm relative">
+      <button
+        onClick={() => setShowQr(s => !s)}
+        className="absolute top-2 right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded hover:bg-purple-700"
+      >{showQr ? 'Hide QR' : 'Show QR'}</button>
+      {showQr && (
+        <div className="absolute top-10 right-2 bg-white border shadow-lg p-2 rounded flex flex-col items-center z-10">
+          <QRCode value={teamUrl} size={160} />
+          <a href={teamUrl} target="_blank" rel="noopener" className="text-blue-600 text-xs underline mt-2">Open Link</a>
+        </div>
+      )}
       {editing ? (
         <div className="flex flex-col gap-2">
           <div className="flex gap-2 items-end flex-wrap">

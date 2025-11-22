@@ -78,6 +78,15 @@ namespace RouteScout.Routes.Extensions
                 return route is not null && !route.Deleted ? Results.Ok(route) : Results.NotFound();
             });
 
+            // New: Get routes by team
+            app.MapGet("/routes/team/{teamId:guid}", async (IDocumentSession session, Guid teamId) =>
+            {
+                var teamRoutes = await session.Query<RouteSummary>()
+                    .Where(r => r.TeamId == teamId && !r.Deleted)
+                    .ToListAsync();
+                return Results.Ok(teamRoutes);
+            });
+
             app.MapPost("/routes", async (IDocumentSession session, CreateRoute dto) =>
             {
                 var routeId = Guid.NewGuid();
@@ -89,7 +98,6 @@ namespace RouteScout.Routes.Extensions
 
             app.MapDelete("/routes/{id:guid}", async (IDocumentSession session, Guid id) =>
             {
-                // Find all stops assigned to this route
                 var stops = await session.Query<StopSummary>().Where(s => s.RouteId == id && !s.Deleted).ToListAsync();
                 foreach (var stop in stops)
                 {
@@ -120,7 +128,10 @@ namespace RouteScout.Routes.Extensions
 
             app.MapPatch("/routes/{routeId:guid}/stops/{stopId:guid}", async (IDocumentSession session, Guid routeId, Guid stopId, AddStopToRoute dto) =>
             {
-                var evt = new StopAddedToRoute(routeId, stopId, dto.Position);
+                var stop = await session.LoadAsync<StopSummary>(stopId);
+                if (stop is null || stop.Deleted) return Results.NotFound();
+
+                var evt = new StopAddedToRoute(routeId, stopId, dto.Position, stop.StreetName, stop.HouseNumber, stop.Amount);
                 session.Events.Append(routeId, evt);
 
                 var evt2 = new StopAssignedToRoute(stopId, routeId);
@@ -154,14 +165,15 @@ namespace RouteScout.Routes.Extensions
                 {
                     var stop = sourceRoute.Stops[i];
                     session.Events.Append(stop, new StopAssignedToRoute(stop, newRouteId1));
-                    session.Events.Append(newRouteId1, new StopAddedToRoute(newRouteId1, stop, i));
+                    // NOTE: stop details not available here without lookup; skipping for split scenario.
+                    session.Events.Append(newRouteId1, new StopAddedToRoute(newRouteId1, stop, i, string.Empty, string.Empty, 0));
                 }
 
                 for (int i = dto.Position; i < sourceRoute.Stops.Count; i++)
                 {
                     var stop = sourceRoute.Stops[i];
                     session.Events.Append(stop, new StopAssignedToRoute(stop, newRouteId2));
-                    session.Events.Append(newRouteId2, new StopAddedToRoute(newRouteId2, stop, i - dto.Position));
+                    session.Events.Append(newRouteId2, new StopAddedToRoute(newRouteId2, stop, i - dto.Position, string.Empty, string.Empty, 0));
                 }
 
                 var evt = new RouteSplitPerformed(id, newRouteId1, newRouteId2, dto.Position);
@@ -181,7 +193,7 @@ namespace RouteScout.Routes.Extensions
                 var position = targetRoute.Stops.Count;
                 foreach (var stop in sourceRoute.Stops)
                 {
-                    session.Events.Append(dto.MergeIntoRouteId, new StopAddedToRoute(dto.MergeIntoRouteId, stop, position++));
+                    session.Events.Append(dto.MergeIntoRouteId, new StopAddedToRoute(dto.MergeIntoRouteId, stop, position++, string.Empty, string.Empty, 0));
                 }
 
                 var evt = new RouteMerged(id, dto.MergeIntoRouteId);
@@ -193,7 +205,6 @@ namespace RouteScout.Routes.Extensions
             // Assign/unassign route to team endpoints
             app.MapPost("/routes/{id:guid}/assign-team/{teamId:guid}", async (IDocumentSession session, Guid id, Guid teamId) =>
             {
-                // Basic existence: ensure route exists
                 var route = await session.LoadAsync<RouteSummary>(id);
                 if (route is null || route.Deleted) return Results.NotFound();
                 session.Events.Append(id, new RouteAssignedToTeam(id, teamId));

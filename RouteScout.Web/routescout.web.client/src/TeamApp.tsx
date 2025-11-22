@@ -1,53 +1,63 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { TeamSummary } from './features/teams/types/TeamSummary';
+import { TeamInfoPage } from './features/teams/components/TeamInfoPage';
+import { TeamRoutesPage } from './features/teams/components/TeamRoutesPage';
 
 export function TeamApp() {
-  const { id } = useParams();
-  const [team, setTeam] = useState<TeamSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const { id } = useParams();
+    const teamId = id || '';
+    const [team, setTeam] = useState<TeamSummary | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const location = useLocation();
 
-  useEffect(() => {
-    async function load() {
-      if (!id) return;
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/teams/${id}`);
-        if (!res.ok) {
-          setError('Team not found');
-          setTeam(null);
-        } else {
-          const data = await res.json();
-          setTeam(data);
-          setError(null);
+    async function loadTeam() {
+        if (!teamId) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/teams/${teamId}`);
+            if (!res.ok) {
+                setError('Team not found');
+                setTeam(null);
+            } else {
+                const data = await res.json();
+                setTeam(data);
+                setError(null);
+            }
+        } catch {
+            setError('Failed to load team');
+        } finally {
+            setLoading(false);
         }
-      } catch (e) {
-        setError('Failed to load team');
-      } finally {
-        setLoading(false);
-      }
     }
-    load();
-  }, [id]);
 
-  return (
-    <div className="p-6 flex flex-col gap-4 max-w-xl mx-auto">
-      {loading && <div>Loading...</div>}
-      {error && <div className="text-red-600">{error}</div>}
-      {team && !loading && !error && (
-        <div className="border rounded p-4 shadow-sm bg-white">
-          <h2 className="text-xl font-semibold mb-2">{team.name}</h2>
-          <div className="text-sm text-gray-700 mb-4">Trailer Size: {team.trailerSize}</div>
-          <div className="mb-4">Leader: <span className="font-medium">{team.leaderName}</span> ({team.leaderPhone})</div>
-          <div>
-            <h3 className="font-semibold mb-1">Members</h3>
-            <ul className="list-disc ml-6">
-              {team.members.map(m => <li key={m}>{m}</li>)}
-            </ul>
-          </div>
+    useEffect(() => { loadTeam(); }, [teamId]);
+
+    const isInfo = location.pathname.endsWith('/info');
+
+    return (
+        <div className="p-6 flex flex-col gap-4 max-w-4xl mx-auto">
+            <div className="flex gap-4 border-b pb-2">
+                <Link
+                    to={`/teams/${teamId}`} // relative root -> routes page
+                    className={`px-4 py-2 rounded-t ${!isInfo ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                >Routes & Stops</Link>
+                <Link
+                    to={`/teams/${teamId}/info`}
+                    className={`px-4 py-2 rounded-t ${isInfo ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                >Team Info</Link>
+            </div>
+
+            {loading && <div>Loading...</div>}
+            {error && <div className="text-red-600">{error}</div>}
+
+            {!loading && !error && team && (
+                <Routes>
+                    <Route path="" element={<TeamRoutesPage teamId={teamId} />} />
+                    <Route path="info" element={<TeamInfoPage team={team} onUpdated={loadTeam} teamId={teamId} />} />
+                </Routes>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 }

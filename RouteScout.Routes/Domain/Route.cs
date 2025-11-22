@@ -11,6 +11,7 @@ public class Route
     public List<Guid> Stops { get; set; } = new(); // Ordered list of StopIds
     public bool Deleted { get; set; } = false;
     public Guid? TeamId { get; set; } // assigned team
+    public List<RouteStopDetail> StopDetails { get; set; } = new(); // optional detailed view
 
     // Apply methods for event sourcing
     public void Apply(RouteCreated e)
@@ -19,6 +20,7 @@ public class Route
         Name = e.Name;
         DropOffPoint = e.DropOffPoint;
         Stops = new List<Guid>();
+        StopDetails = new List<RouteStopDetail>();
         Deleted = false;
         TeamId = null;
     }
@@ -38,15 +40,24 @@ public class Route
         if (!Stops.Contains(e.StopId))
         {
             if (e.Position >= 0 && e.Position <= Stops.Count)
+            {
                 Stops.Insert(e.Position, e.StopId);
+                StopDetails.Insert(e.Position, new RouteStopDetail(e.StopId, e.StreetName, e.HouseNumber, e.Amount));
+            }
             else
+            {
                 Stops.Add(e.StopId);
+                StopDetails.Add(new RouteStopDetail(e.StopId, e.StreetName, e.HouseNumber, e.Amount));
+            }
         }
     }
 
     public void Apply(StopRemovedFromRoute e)
     {
+        var index = Stops.IndexOf(e.StopId);
         Stops.Remove(e.StopId);
+        if (index >= 0 && index < StopDetails.Count)
+            StopDetails.RemoveAt(index);
     }
 
     public void Apply(RouteSplitPerformed e)
@@ -74,3 +85,5 @@ public class Route
         if (TeamId == e.TeamId) TeamId = null;
     }
 }
+
+public record RouteStopDetail(Guid StopId, string StreetName, string HouseNumber, int Amount);

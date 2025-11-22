@@ -8,6 +8,7 @@ namespace RouteScout.Routes.Projections
         public string Name { get; set; } = string.Empty;
         public string DropOffPoint { get; set; } = string.Empty;
         public List<Guid> Stops { get; set; } = new();
+        public List<RouteStopDetail> StopDetails { get; set; } = new(); // new detailed list
         public bool Deleted { get; set; }
         public Guid? TeamId { get; set; } // assigned team
 
@@ -17,6 +18,7 @@ namespace RouteScout.Routes.Projections
             Name = e.Name,
             DropOffPoint = e.DropOffPoint,
             Stops = new List<Guid>(),
+            StopDetails = new List<RouteStopDetail>(),
             Deleted = false,
             TeamId = null
         };
@@ -29,13 +31,28 @@ namespace RouteScout.Routes.Projections
             if (!Stops.Contains(e.StopId))
             {
                 if (e.Position >= 0 && e.Position <= Stops.Count)
+                {
                     Stops.Insert(e.Position, e.StopId);
+                    StopDetails.Insert(e.Position, new RouteStopDetail(e.StopId, e.StreetName, e.HouseNumber, e.Amount));
+                }
                 else
+                {
                     Stops.Add(e.StopId);
+                    StopDetails.Add(new RouteStopDetail(e.StopId, e.StreetName, e.HouseNumber, e.Amount));
+                }
             }
         }
 
-        public void Apply(StopRemovedFromRoute e) => Stops.Remove(e.StopId);
+        public void Apply(StopRemovedFromRoute e)
+        {
+            var index = Stops.IndexOf(e.StopId);
+            Stops.Remove(e.StopId);
+            if (index >= 0 && index < StopDetails.Count)
+            {
+                StopDetails.RemoveAt(index);
+            }
+        }
+
         public void Apply(RouteSplitPerformed e) => Deleted = true;
         public void Apply(RouteMerged e) { /* optional custom logic */ }
         public void Apply(RouteDeleted e) => Deleted = true;
@@ -45,4 +62,6 @@ namespace RouteScout.Routes.Projections
             if (TeamId == e.TeamId) TeamId = null;
         }
     }
+
+    public record RouteStopDetail(Guid StopId, string StreetName, string HouseNumber, int Amount);
 }

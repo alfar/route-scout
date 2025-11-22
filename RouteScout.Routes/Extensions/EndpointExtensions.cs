@@ -190,6 +190,26 @@ namespace RouteScout.Routes.Extensions
                 return Results.Ok();
             });
 
+            // Assign/unassign route to team endpoints
+            app.MapPost("/routes/{id:guid}/assign-team/{teamId:guid}", async (IDocumentSession session, Guid id, Guid teamId) =>
+            {
+                // Basic existence: ensure route exists
+                var route = await session.LoadAsync<RouteSummary>(id);
+                if (route is null || route.Deleted) return Results.NotFound();
+                session.Events.Append(id, new RouteAssignedToTeam(id, teamId));
+                await session.SaveChangesAsync();
+                return Results.Ok();
+            });
+
+            app.MapPost("/routes/{id:guid}/unassign-team", async (IDocumentSession session, Guid id) =>
+            {
+                var route = await session.LoadAsync<RouteSummary>(id);
+                if (route is null || route.Deleted || route.TeamId is null) return Results.NotFound();
+                session.Events.Append(id, new RouteUnassignedFromTeam(id, route.TeamId.Value));
+                await session.SaveChangesAsync();
+                return Results.Ok();
+            });
+
             return app;
         }
     }

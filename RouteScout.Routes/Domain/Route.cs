@@ -10,6 +10,7 @@ public class Route
     public string DropOffPoint { get; set; } = string.Empty;
     public List<Guid> Stops { get; set; } = new(); // Ordered list of StopIds
     public bool Deleted { get; set; } = false;
+    public Guid? TeamId { get; set; } // assigned team
 
     // Apply methods for event sourcing
     public void Apply(RouteCreated e)
@@ -19,6 +20,7 @@ public class Route
         DropOffPoint = e.DropOffPoint;
         Stops = new List<Guid>();
         Deleted = false;
+        TeamId = null;
     }
 
     public void Apply(RouteRenamed e)
@@ -60,5 +62,15 @@ public class Route
     public void Apply(RouteDeleted e)
     {
         Deleted = true;
+    }
+
+    public void Apply(RouteAssignedToTeam e)
+    {
+        TeamId = e.TeamId;
+    }
+
+    public void Apply(RouteUnassignedFromTeam e)
+    {
+        if (TeamId == e.TeamId) TeamId = null;
     }
 }

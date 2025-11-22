@@ -1,3 +1,3 @@
 namespace RouteScout.Teams.Dto;
 
-public record TeamSummaryDto(Guid Id, string TrailerSize, string LeaderName, string LeaderPhone, IReadOnlyList<string> Members, string QrCodePngBase64);
+public record TeamSummaryDto(Guid Id, string TrailerSize, string LeaderName, string LeaderPhone, IReadOnlyList<string> Members);

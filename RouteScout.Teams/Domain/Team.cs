@@ -5,6 +5,7 @@ namespace RouteScout.Teams.Domain;
 public class Team
 {
     public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty; // Team name
     public string TrailerSize { get; set; } = string.Empty; // Small, Large, Boogie
     public string LeaderName { get; set; } = string.Empty;
     public string LeaderPhone { get; set; } = string.Empty;
@@ -13,14 +14,15 @@ public class Team
     public void Apply(TeamCreated e)
     {
         Id = e.TeamId;
+        Name = e.TeamName;
         TrailerSize = e.TrailerSize;
         LeaderName = e.LeaderName;
         LeaderPhone = e.LeaderPhone;
-        Members = e.Members.ToList();
     }
 
     public void Apply(TeamUpdated e)
     {
+        Name = e.TeamName;
         TrailerSize = e.TrailerSize;
         LeaderName = e.LeaderName;
         LeaderPhone = e.LeaderPhone;

@@ -1,7 +1,6 @@
 using Marten;
 using Microsoft.AspNetCore.Http.HttpResults;
 using RouteScout.Teams.Dto;
-using RouteScout.Teams.Extensions; // for QR code
 using RouteScout.Teams.Projections;
 using RouteScout.Teams.Services;
 
@@ -11,19 +10,24 @@ public static class EndpointExtensions
 {
     public static IEndpointRouteBuilder MapTeamEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/teams");
+        var group = app.MapGroup("teams");
 
-        group.MapPost("/", async (CreateTeam dto, ITeamService service) =>
+        group.MapPost("/", async (CreateTeam dto, ITeamService service, IQuerySession query) =>
         {
             if (string.IsNullOrWhiteSpace(dto.LeaderName)) return Results.BadRequest("Leader name required");
-            var id = await service.CreateTeam(dto.TrailerSize, dto.LeaderName, dto.LeaderPhone, dto.Members);
-            return Results.Created($"/api/teams/{id}", new { id });
+            var id = await service.CreateTeam(dto.TrailerSize, dto.LeaderName, dto.LeaderPhone);
+            var summary = await query.LoadAsync<TeamSummary>(id);
+            return Results.Created($"/api/teams/{id}", new { id, summary?.Name });
         });
 
         // Update team metadata (not members)
-        group.MapPut("/{id:guid}", async (Guid id, UpdateTeam dto, ITeamService service) =>
+        group.MapPut("/{id:guid}", async (Guid id, UpdateTeam dto, ITeamService service, IQuerySession query, string? teamName) =>
         {
-            await service.UpdateTeam(id, dto.TrailerSize, dto.LeaderName, dto.LeaderPhone);
+            // Allow optional ?teamName= override, else keep existing
+            var existing = await query.LoadAsync<TeamSummary>(id);
+            if (existing is null) return Results.NotFound();
+            var newName = string.IsNullOrWhiteSpace(teamName) ? existing.Name : teamName;
+            await service.UpdateTeam(id, newName, dto.TrailerSize, dto.LeaderName, dto.LeaderPhone);
             return Results.NoContent();
         });
 
@@ -42,13 +46,10 @@ public static class EndpointExtensions
             return Results.NoContent();
         });
 
-        group.MapGet("/{id:guid}", async (HttpContext http, Guid id, IQuerySession query) =>
+        group.MapGet("/{id:guid}", async (Guid id, IQuerySession query) =>
         {
             var summary = await query.LoadAsync<TeamSummary>(id);
-            if (summary is null) return Results.NotFound();
-            var baseUrl = $"{http.Request.Scheme}://{http.Request.Host}";
-            var dto = summary.ToDto(baseUrl);
-            return Results.Ok(dto);
+            return summary is null ? Results.NotFound() : Results.Ok(summary);
         });
 
         group.MapGet("/", async (IQuerySession query) =>

@@ -9,9 +9,11 @@ using RouteScout.Payments.Endpoints;
 using RouteScout.Payments.Extensions;
 using RouteScout.Payments.IntegrationPoints;
 using RouteScout.Routes.Extensions;
+using RouteScout.Routes.Integrations;
 using RouteScout.Teams.Extensions;
 using RouteScout.Web.Server.Integration.AddressWashing;
 using RouteScout.Web.Server.Integration.Payments;
+using RouteScout.Web.Server.Integration.Routes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +31,7 @@ builder.Services.AddTeams();
 builder.Services.AddScoped<IAddressCandidateConfirmedHandler, AddressConfirmedAddStopHandler>();
 builder.Services.AddScoped<IAddressCandidateRejectedHandler, AddressRejectedPaymentResetHandler>();
 builder.Services.AddScoped<IPaymentConfirmedHandler, PaymentConfirmedAddAddressHandler>();
+builder.Services.AddScoped<IStopNotFoundEventHandler, StopNotFoundCreateIssueEventHandler>();
 
 builder.Services.AddMarten(opts =>
 {

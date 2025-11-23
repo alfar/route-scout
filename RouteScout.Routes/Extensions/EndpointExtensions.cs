@@ -1,6 +1,7 @@
 ﻿using Marten;
 using RouteScout.Routes.Domain.Events;
 using RouteScout.Routes.Dto;
+using RouteScout.Routes.Integrations;
 using RouteScout.Routes.Projections;
 
 namespace RouteScout.Routes.Extensions
@@ -76,13 +77,20 @@ namespace RouteScout.Routes.Extensions
                 return Results.Ok();
             });
 
-            stopGroup.MapPost("/{id:guid}/not-found", async (IDocumentSession session, Guid id) =>
+            stopGroup.MapPost("/{id:guid}/not-found", async (IDocumentSession session, Guid id, IEnumerable<IStopNotFoundEventHandler> handlers) =>
             {
                 var stop = await session.LoadAsync<StopSummary>(id);
                 if (stop is null || stop.Deleted) return Results.NotFound();
                 if (stop.Status == StopStatus.NotFound) return Results.Ok();
-                session.Events.Append(id, new StopNotFound(id));
+                var notFoundEvent = new StopNotFound(id);
+                session.Events.Append(id, notFoundEvent);
                 await session.SaveChangesAsync();
+
+                foreach (var handler in handlers)
+                {
+                    await handler.HandleAsync(notFoundEvent);
+                }
+
                 return Results.Ok();
             });
 

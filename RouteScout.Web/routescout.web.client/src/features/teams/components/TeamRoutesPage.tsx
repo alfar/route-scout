@@ -67,10 +67,15 @@ export function TeamRoutesPage({ teamId }: Props) {
         await load();
     }
 
+    async function cutShort(route: RouteSummary) {
+        await fetch(`/api/routes/${route.id}/cut-short`, { method: 'POST' });
+        await load();
+    }
+
     function statusBadge(status: string) {
         switch (status) {
-            case "Completed": return <span className="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700">Completed</span>;
-            case "NotFound": return <span className="px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800">Not Found</span>;
+            case 'Completed': return <span className="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700">Completed</span>;
+            case 'NotFound': return <span className="px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800">Not Found</span>;
             default: return <span className="px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-600">Pending</span>;
         }
     }
@@ -88,9 +93,11 @@ export function TeamRoutesPage({ teamId }: Props) {
                         <div className="font-semibold flex items-center gap-2">
                             <span>{route.name}</span>
                             <span className="text-xs text-gray-500">Extra Trees: {route.extraTrees ?? 0}</span>
+                            {route.cutShort && <span className="text-xs text-red-600">Cut Short</span>}
                             <div className="flex gap-1 ml-auto">
                                 <button onClick={() => addExtraTrees(route.id, 1)} className="px-2 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700">+1</button>
-                                <button onClick={() => removeExtraTrees(route.id, 1)} className="px-2 py-1 text-xs rounded bg-indigo-600 text-white hover:bg-indigo-700" disabled={(route.extraTrees ?? 0) < 1}>-1</button>
+                                <button onClick={() => removeExtraTrees(route.id, 1)} disabled={(route.extraTrees ?? 0) < 1} className="px-2 py-1 text-xs rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40">-1</button>
+                                {!route.cutShort && <button onClick={() => cutShort(route)} className="px-2 py-1 text-xs rounded bg-orange-600 text-white hover:bg-orange-700">Cut Short</button>}
                             </div>
                         </div>
                         <div className="text-sm text-gray-600">Drop Off: {route.dropOffPoint}</div>
@@ -104,13 +111,13 @@ export function TeamRoutesPage({ teamId }: Props) {
                                         {statusBadge(s.status)}
                                     </div>
                                     <div className="flex gap-2">
-                                        {s.status === "Pending" && (
+                                        {s.status === 'Pending' && (
                                             <>
                                                 <button onClick={() => completeStop(s.id)} className="px-2 py-1 text-xs rounded bg-green-600 text-white hover:bg-green-700">Completed</button>
                                                 <button onClick={() => notFoundStop(s.id)} className="px-2 py-1 text-xs rounded bg-yellow-600 text-white hover:bg-yellow-700">Not Found</button>
                                             </>
                                         )}
-                                        {s.status !== "Pending" && (
+                                        {s.status !== 'Pending' && (
                                             <button onClick={() => resetStop(s.id)} className="px-2 py-1 text-xs rounded bg-gray-600 text-white hover:bg-gray-700">Reset</button>
                                         )}
                                     </div>

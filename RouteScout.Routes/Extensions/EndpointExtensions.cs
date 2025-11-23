@@ -1,6 +1,7 @@
 ﻿using Marten;
 using RouteScout.Routes.Domain.Events;
 using RouteScout.Routes.Dto;
+using RouteScout.Routes.IntegrationPoints;
 using RouteScout.Routes.Integrations;
 using RouteScout.Routes.Projections;
 
@@ -173,6 +174,12 @@ namespace RouteScout.Routes.Extensions
                 var stop = await session.LoadAsync<StopSummary>(stopId);
                 if (stop is null || stop.Deleted) return Results.NotFound();
 
+                if (stop.RouteId is not null)
+                {
+                    var unassignEvent = new StopRemovedFromRoute(stop.RouteId.Value, stopId);
+                    session.Events.Append(stop.RouteId.Value, unassignEvent);
+                }
+
                 var evt = new StopAddedToRoute(routeId, stopId, dto.Position, stop.StreetName, stop.HouseNumber, stop.Amount);
                 session.Events.Append(routeId, evt);
 
@@ -282,6 +289,24 @@ namespace RouteScout.Routes.Extensions
                 if (route.ExtraTrees - amount < 0) return Results.BadRequest("Cannot reduce below zero");
                 session.Events.Append(id, new RouteExtraTreesRemoved(id, amount));
                 await session.SaveChangesAsync();
+                return Results.Ok();
+            });
+
+            // Route cut short endpoint
+            routeGroup.MapPost("/{id:guid}/cut-short", async (IDocumentSession session, Guid id, IEnumerable<IRouteCutShortEventHandler> handlers) =>
+            {
+                var route = await session.LoadAsync<RouteSummary>(id);
+                if (route is null || route.Deleted) return Results.NotFound();
+                if (route.CutShort) return Results.BadRequest("Route already cut short");
+                var @event = new RouteCutShort(id);
+                session.Events.Append(id, @event);
+                await session.SaveChangesAsync();
+
+                foreach (var handler in handlers)
+                {
+                    await handler.HandleAsync(@event);
+                }
+
                 return Results.Ok();
             });
 

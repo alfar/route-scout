@@ -1,50 +1,33 @@
 import { useDraggable } from '@dnd-kit/core';
 import React from 'react';
+import { StopSummary } from '../pages/RouteManagementPage';
+import { CheckIcon, ExclamationTriangleIcon, ForwardIcon, HomeIcon } from '@heroicons/react/24/outline';
 
 export interface DraggableStopProps {
-    id: string;
-    name: string;
-    index: number;
-    onDragStart?: (id: string, index: number) => void;
-    onDrop?: (id: string, index: number) => void;
+    stop: StopSummary;
 }
 
 export const DraggableStop: React.FC<DraggableStopProps> = ({
-    id,
-    name,
-    index,
-    onDragStart,
-    onDrop
+    stop
 }) => {
-    const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-        e.dataTransfer.setData('text/plain', id);
-        if (onDragStart) {
-            onDragStart(id, index);
+    const { attributes, listeners, setNodeRef, active } = useDraggable({ id: stop.id });
+
+    const icon = (stop: StopSummary) => {
+        switch (stop.status) {
+            case "Pending":
+                return <ForwardIcon className="size-6 text-gray-300"></ForwardIcon>;
+            case "Completed":
+                return <CheckIcon className="size-6 text-green-500" />;
+            case "NotFound":
+                return <ExclamationTriangleIcon className="size-6 text-red-500" />
         }
     };
-
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        const droppedId = e.dataTransfer.getData('text/plain');
-        if (onDrop) {
-            onDrop(droppedId, index);
-        }
-    };
-
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-    };
-
-    const { attributes, listeners, setNodeRef, active } = useDraggable({ id });
 
     return (
         <div
             ref={setNodeRef}
             {...listeners}
             {...attributes}
-            onDragStart={handleDragStart}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
             style={{
                 opacity: active ? 0.5 : 1,
                 cursor: 'grab',
@@ -54,8 +37,12 @@ export const DraggableStop: React.FC<DraggableStopProps> = ({
                 background: '#fff',
                 borderRadius: '4px',
             }}
+            className="flex"
         >
-            {name}
+            <HomeIcon className="size-6 mr-2 text-gray-500" />
+            <div className="text-left flex-grow">{stop.streetName} {stop.houseNumber}</div>
+            <div className="mr-2">{stop.amount}</div>
+            <div>{icon(stop)}</div>
         </div>
     );
 };

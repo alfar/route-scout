@@ -25,8 +25,8 @@ const UnassignedStopList: React.FC<Props> = ({ stops }) => {
             <ul>
                 {stops.length === 0 && <li className="text-gray-400">No unassigned stops</li>}
                 {stops.map((stop, i) => (
-                    <li key={stop.id} className="mb-2 flex items-center gap-2">
-                        <DraggableStop id={stop.id} name={`${stop.streetName} ${stop.houseNumber}`} index={i} />
+                    <li key={stop.id} className="mb-2">
+                        <DraggableStop stop={stop} />
                     </li>
                 ))}
             </ul>

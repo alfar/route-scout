@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { DndContext, DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core';
+import { DndContext, DragOverlay } from '@dnd-kit/core';
 import RouteList from '../components/RouteList';
 import UnassignedStopList from '../components/UnassignedStopList';
-import AssignStopForm from '../components/AssignStopForm';
 import CreateRouteForm from '../components/CreateRouteForm';
 import { DroppableTeam } from '../components/DroppableTeam';
 import { TeamSummary } from '../../teams/types/TeamSummary';
+import DroppableRoute from '../components/DroppableRoute';
+import DraggableStop from '../components/DraggableStop';
+import DroppableUnassignRoute from '../components/DroppableUnassignRoute';
 
 export interface RouteSummary {
     id: string;
@@ -14,7 +16,8 @@ export interface RouteSummary {
     stops: string[];
     deleted: boolean;
     teamId?: string | null;
-    extraTrees?: number; // added
+    extraTrees?: number;
+    cutShort?: boolean;
 }
 
 export interface StopSummary {
@@ -26,7 +29,7 @@ export interface StopSummary {
     amount: number;
     routeId: string | null;
     deleted: boolean;
-    status: number; // 0 Pending, 1 Completed, 2 NotFound
+    status: "Pending" | "Completed" | "NotFound";
 }
 
 const RouteManagementPage: React.FC = () => {
@@ -158,11 +161,12 @@ const RouteManagementPage: React.FC = () => {
                             <h2 className="text-xl font-semibold mb-2">Teams</h2>
                             <div className="border rounded p-3 mb-4">
                                 <div className="text-xs text-gray-500 mb-2">Drag a route onto a team to assign. Drag a route onto "Routes" to clear team.</div>
-                                {teams.map(t => <DroppableTeam key={t.id} team={t} routes={routes.filter(r => r.teamId === t.id)} />)}
+                                    {teams.map(t => <DroppableTeam key={t.id} team={t} routes={routes.filter(r => r.teamId === t.id)} stops={stops} onUnassign={handleUnassignStop} hoveredRouteId={hoveredRouteId} />)}
                             </div>
                         </div>
                         <div className="lg:col-span-1">
                             <h2 className="text-xl font-semibold mb-2">Routes</h2>
+                            <DroppableUnassignRoute id="route-unassign"></DroppableUnassignRoute>
                             <RouteList routes={routes.filter(r => !r.teamId).map(r => ({ ...r, id: r.id }))} stops={stops} onUnassign={handleUnassignStop} hoveredRouteId={hoveredRouteId} />
                         </div>
                         <div className="lg:col-span-1">
@@ -174,7 +178,7 @@ const RouteManagementPage: React.FC = () => {
             </div>
             <DragOverlay>
                 {draggedStop && (
-                    <div className="p-2 border bg-white rounded shadow">Stop: {draggedStop.houseNumber} {draggedStop.streetName}</div>
+                    <DraggableStop stop={draggedStop} />
                 )}
                 {draggedRoute && (
                     <div className="p-2 border bg-indigo-50 rounded shadow">Route: {draggedRoute.name}</div>

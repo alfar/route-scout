@@ -31,6 +31,7 @@ namespace RouteScout.Routes.Extensions
             opts.Events.AddEventType<RouteUnassignedFromTeam>(); // added
             opts.Events.AddEventType<RouteExtraTreesAdded>();
             opts.Events.AddEventType<RouteExtraTreesRemoved>();
+            opts.Events.AddEventType<RouteCutShort>();
 
             // Register projections as snapshots
             opts.Projections.Snapshot<StopSummary>(SnapshotLifecycle.Inline);

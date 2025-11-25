@@ -66,11 +66,15 @@ public class Route
 
     public void Apply(RouteSplitPerformed e)
     {
+        Stops.Clear();
+        StopDetails.Clear();
         Deleted = true;
     }
 
     public void Apply(RouteMerged e)
     {
+        Stops.Clear();
+        StopDetails.Clear();
         Deleted = true;
     }
 

@@ -4,6 +4,7 @@ import { TeamSummary } from '../../teams/types/TeamSummary';
 import { RouteSummary, StopSummary } from '../pages/RouteManagementPage';
 import RouteList from './RouteList';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
+import DroppableContainer from './DroppableContainer';
 
 interface DroppableTeamProps {
     team: TeamSummary;
@@ -14,16 +15,8 @@ interface DroppableTeamProps {
 }
 
 export const DroppableTeam: React.FC<DroppableTeamProps> = ({ team, routes, stops, onUnassign, hoveredRouteId }) => {
-    const { setNodeRef, isOver } = useDroppable({ id: `team-${team.id}` });
     return (
-        <div
-            ref={setNodeRef}
-            className="p-3 border rounded mb-3 border-gray-600"
-            style={{
-                background: isOver ? '#f0fdf4' : '#f8fafc',
-                borderColor: isOver ? '#16a34a' : '#94a3b8'
-            }}
-        >
+        <DroppableContainer id={`team-${team.id}`}>
             <div className="font-semibold flex mb-1 text-gray-600"><UserGroupIcon className="size-6 mr-1" /> {team.name}</div>
             <div className="flex justify-between">
                 <div className="text-xs text-gray-600 mb-1">{team.leaderName} ({team.leaderPhone})</div>
@@ -33,6 +26,6 @@ export const DroppableTeam: React.FC<DroppableTeamProps> = ({ team, routes, stop
             <div className="flex flex-col gap-1">
                 <RouteList routes={routes} stops={stops} onUnassign={onUnassign} hoveredRouteId={hoveredRouteId}></RouteList>
             </div>
-        </div>
+        </DroppableContainer>
     );
 };

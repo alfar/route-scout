@@ -3,6 +3,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { RouteSummary, StopSummary } from '../pages/RouteManagementPage';
 import { ClipboardIcon } from '@heroicons/react/24/outline';
 import DraggableStop from './DraggableStop';
+import DroppableContainer from './DroppableContainer';
 
 interface DroppableRouteProps {
     route: RouteSummary;
@@ -11,16 +12,8 @@ interface DroppableRouteProps {
 }
 
 const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, stops, isOver }) => {
-    const { setNodeRef } = useDroppable({ id: route.id });
     return (
-        <div
-            ref={setNodeRef}
-            className="p-3 border rounded mb-3 border-gray-600 mb-4"
-            style={{
-                background: isOver ? '#e0f7fa' : '#f8fafc',
-                minHeight: 60,
-            }}
-        >
+        <DroppableContainer id={route.id}>
             <DraggableRouteLabel route={route} />
             <div className="text-xs text-left text-gray-600 mb-2">Drop-off: {route.dropOffPoint}</div>
             <div>
@@ -33,7 +26,7 @@ const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, stops, isOver })
                     );
                 })}
             </div>
-        </div>
+        </DroppableContainer>
     );
 };
 

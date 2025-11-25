@@ -57,8 +57,17 @@ namespace RouteScout.Routes.Projections
             }
         }
 
-        public void Apply(RouteSplitPerformed e) => Deleted = true;
-        public void Apply(RouteMerged e) { /* optional custom logic */ }
+        public void Apply(RouteSplitPerformed e)
+        {
+            Stops.Clear();
+            StopDetails.Clear();
+            Deleted = true;
+        }
+        public void Apply(RouteMerged e) {
+            Stops.Clear();
+            StopDetails.Clear();
+            Deleted = true;
+        }
         public void Apply(RouteDeleted e) => Deleted = true;
         public void Apply(RouteAssignedToTeam e) => TeamId = e.TeamId;
         public void Apply(RouteUnassignedFromTeam e)

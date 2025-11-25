@@ -8,6 +8,7 @@ import { TeamSummary } from '../../teams/types/TeamSummary';
 import DroppableRoute from '../components/DroppableRoute';
 import DraggableStop from '../components/DraggableStop';
 import DroppableUnassignRoute from '../components/DroppableUnassignRoute';
+import DroppableContainer from '../components/DroppableContainer';
 
 export interface RouteSummary {
     id: string;
@@ -159,14 +160,16 @@ const RouteManagementPage: React.FC = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-1">
                             <h2 className="text-xl font-semibold mb-2">Teams</h2>
-                            <div className="border rounded p-3 mb-4">
+                            <div className="border border-gray-400 rounded p-3 mb-4">
                                 <div className="text-xs text-gray-500 mb-2">Drag a route onto a team to assign. Drag a route onto "Routes" to clear team.</div>
-                                    {teams.map(t => <DroppableTeam key={t.id} team={t} routes={routes.filter(r => r.teamId === t.id)} stops={stops} onUnassign={handleUnassignStop} hoveredRouteId={hoveredRouteId} />)}
+                                {teams.map(t =>
+                                    <DroppableTeam key={t.id} team={t} routes={routes.filter(r => r.teamId === t.id)} stops={stops} onUnassign={handleUnassignStop} hoveredRouteId={hoveredRouteId} />
+                                )}
                             </div>
                         </div>
                         <div className="lg:col-span-1">
                             <h2 className="text-xl font-semibold mb-2">Routes</h2>
-                            <DroppableUnassignRoute id="route-unassign"></DroppableUnassignRoute>
+                            <DroppableContainer id="route-unassign">Drop here to unassign route</DroppableContainer>
                             <RouteList routes={routes.filter(r => !r.teamId).map(r => ({ ...r, id: r.id }))} stops={stops} onUnassign={handleUnassignStop} hoveredRouteId={hoveredRouteId} />
                         </div>
                         <div className="lg:col-span-1">

@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteScout.Teams", "RouteSc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteScout.Issues", "RouteScout.Issues\RouteScout.Issues.csproj", "{D50A98D7-A5AF-51DA-666B-975B435119F0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteScout.StreetCatalog", "RouteScout.StreetCatalog\RouteScout.StreetCatalog.csproj", "{3D8387BC-350F-7B62-3E1D-EC3A588138D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{D50A98D7-A5AF-51DA-666B-975B435119F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D50A98D7-A5AF-51DA-666B-975B435119F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D50A98D7-A5AF-51DA-666B-975B435119F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D8387BC-350F-7B62-3E1D-EC3A588138D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D8387BC-350F-7B62-3E1D-EC3A588138D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D8387BC-350F-7B62-3E1D-EC3A588138D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D8387BC-350F-7B62-3E1D-EC3A588138D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -11,6 +11,7 @@ using RouteScout.Payments.IntegrationPoints;
 using RouteScout.Routes.Extensions;
 using RouteScout.Routes.IntegrationPoints;
 using RouteScout.Routes.Integrations;
+using RouteScout.StreetCatalog.Extensions;
 using RouteScout.Teams.Extensions;
 using RouteScout.Web.Server.Integration.AddressWashing;
 using RouteScout.Web.Server.Integration.Payments;
@@ -80,6 +81,7 @@ app.MapGroup("/api")
     .MapIssueEndpoints()
     .MapPaymentEndpoints()
     .MapRouteEndpoints()
+    .MapStreetCatalogEndpoints()
     .MapTeamEndpoints();
 
 app.MapFallbackToFile("/index.html");

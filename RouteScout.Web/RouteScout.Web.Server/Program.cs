@@ -12,6 +12,7 @@ using RouteScout.Routes.Extensions;
 using RouteScout.Routes.IntegrationPoints;
 using RouteScout.Routes.Integrations;
 using RouteScout.StreetCatalog.Extensions;
+using RouteScout.StreetCatalog.Services;
 using RouteScout.Teams.Extensions;
 using RouteScout.Web.Server.Integration.AddressWashing;
 using RouteScout.Web.Server.Integration.Payments;
@@ -36,6 +37,8 @@ builder.Services.AddScoped<IPaymentConfirmedHandler, PaymentConfirmedAddAddressH
 builder.Services.AddScoped<IStopNotFoundEventHandler, StopNotFoundCreateIssueEventHandler>();
 builder.Services.AddScoped<IRouteCutShortEventHandler, RouteCutShortCreateIssueEventHandler>();
 
+builder.Services.AddScoped<IStreetCatalogClient, StreetCatalogClient>();
+
 builder.Services.AddMarten(opts =>
 {
     opts.Connection(connectionString);
@@ -52,7 +55,6 @@ builder.Services.AddMarten(opts =>
     opts.AddTeamsEventTypesAndProjections();
 
 }).UseLightweightSessions();
-
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

@@ -13,6 +13,7 @@ namespace RouteScout.Routes.Projections
         public Guid? RouteId { get; set; }
         public bool Deleted { get; set; }
         public StopStatus Status { get; set; }
+        public int SortOrder { get; set; }
 
         public static StopSummary Create(StopCreated e) => new()
         {
@@ -24,7 +25,8 @@ namespace RouteScout.Routes.Projections
             Amount = e.Amount,
             RouteId = null,
             Deleted = false,
-            Status = StopStatus.Pending
+            Status = StopStatus.Pending,
+            SortOrder = e.SortOrder
         };
 
         public void Apply(StopAssignedToRoute e)

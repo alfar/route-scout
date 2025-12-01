@@ -16,7 +16,7 @@ namespace RouteScout.Routes.Extensions
             // Stops Endpoints
             stopGroup.MapGet("", async (IDocumentSession session) =>
             {
-                var stops = await session.Query<StopSummary>().Where(s => !s.Deleted).ToListAsync();
+                var stops = await session.Query<StopSummary>().Where(s => !s.Deleted).OrderBy(s => s.SortOrder).ToListAsync();
                 return Results.Ok(stops);
             });
 
@@ -29,7 +29,8 @@ namespace RouteScout.Routes.Extensions
             stopGroup.MapPost("", async (IDocumentSession session, CreateStop dto) =>
             {
                 var stopId = Guid.NewGuid();
-                var evt = new StopCreated(stopId, dto.AddressId, dto.StreetId, dto.StreetName, dto.HouseNumber, dto.Amount);
+                var sortOrder = 0; // could be derived externally later
+                var evt = new StopCreated(stopId, dto.AddressId, dto.StreetId, dto.StreetName, dto.HouseNumber, dto.Amount, sortOrder);
                 session.Events.StartStream<Domain.Stop>(stopId, evt);
                 await session.SaveChangesAsync();
                 return Results.Created($"/{stopId}", stopId);

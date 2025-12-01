@@ -14,6 +14,7 @@ public class Stop
     public Guid? RouteId { get; set; }
     public bool Deleted { get; set; } = false;
     public StopStatus Status { get; set; } = StopStatus.Pending;
+    public int SortOrder { get; set; }
 
     // Apply methods for event sourcing
     public void Apply(StopCreated e)
@@ -27,6 +28,7 @@ public class Stop
         RouteId = null;
         Deleted = false;
         Status = StopStatus.Pending;
+        SortOrder = e.SortOrder;
     }
 
     public void Apply(StopAssignedToRoute e)

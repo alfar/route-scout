@@ -20,7 +20,7 @@ namespace RouteScout.Web.Server.Integration.AddressWashing
             _catalog = catalog;
         }
 
-        // This method should be called when an AddressRejected event is handled
+        // This method should be called when an AddressConfirmed event is handled
         public async Task HandleAsync(AddressConfirmed @event)
         {
             using var session = _store.LightweightSession();

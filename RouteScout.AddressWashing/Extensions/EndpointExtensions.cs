@@ -6,7 +6,7 @@ public static class EndpointExtensions
 {
     public static IEndpointRouteBuilder MapAddressWashingEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/address-candiates").WithTags("AddressWashing");
+        var group = app.MapGroup("/address-candidates").WithTags("AddressWashing");
 
         group.MapPost("", AddressWashingController.AddAddressTextAsync);
         group.MapGet("", AddressWashingController.GetCandidatesAsync);

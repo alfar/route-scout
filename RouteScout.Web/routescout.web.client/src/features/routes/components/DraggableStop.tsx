@@ -30,14 +30,8 @@ export const DraggableStop: React.FC<DraggableStopProps> = ({
             {...attributes}
             style={{
                 opacity: active ? 0.5 : 1,
-                cursor: 'grab',
-                padding: '8px',
-                border: '1px solid #ccc',
-                marginBottom: '4px',
-                background: '#fff',
-                borderRadius: '4px',
             }}
-            className="flex"
+            className="flex cursor-grab p-1 border-gray-300 rounded mb-1"
         >
             <HomeIcon className="size-6 mr-2 text-gray-500" />
             <div className="text-left flex-grow">{stop.streetName} {stop.houseNumber}</div>

@@ -23,7 +23,7 @@ public static class AddressWashingController
 
         var id = await addressCandidateService.AddAddressCandidateAsync(dto.RawAddress, dto.PaymentId, dto.Amount);
 
-        return Results.Created($"/address-candidates/{id}", new { id });
+        return Results.Created($"/api/address-candidates/{id}", new { id });
     }
 
     public static async Task<IResult> GetCandidatesAsync(IQuerySession q)

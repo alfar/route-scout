@@ -4,6 +4,7 @@ using RouteScout.Routes.Dto;
 using RouteScout.Routes.IntegrationPoints;
 using RouteScout.Routes.Integrations;
 using RouteScout.Routes.Projections;
+using RouteScout.Routes.Domain;
 
 namespace RouteScout.Routes.Extensions
 {
@@ -24,16 +25,6 @@ namespace RouteScout.Routes.Extensions
             {
                 var stop = await session.LoadAsync<StopSummary>(id);
                 return stop is not null && !stop.Deleted ? Results.Ok(stop) : Results.NotFound();
-            });
-
-            stopGroup.MapPost("", async (IDocumentSession session, CreateStop dto) =>
-            {
-                var stopId = Guid.NewGuid();
-                var sortOrder = 0; // could be derived externally later
-                var evt = new StopCreated(stopId, dto.AddressId, dto.StreetId, dto.StreetName, dto.HouseNumber, dto.Amount, sortOrder);
-                session.Events.StartStream<Domain.Stop>(stopId, evt);
-                await session.SaveChangesAsync();
-                return Results.Created($"/{stopId}", stopId);
             });
 
             stopGroup.MapDelete("/{id:guid}", async (IDocumentSession session, Guid id) =>
@@ -133,9 +124,29 @@ namespace RouteScout.Routes.Extensions
 
             routeGroup.MapPost("", async (IDocumentSession session, CreateRoute dto) =>
             {
+                // Load current area sequence aggregate (event-sourced)
+                var areaSeq = await session.LoadAsync<RouteAreaSequence>(dto.AreaId);
+                var currentSeq = areaSeq?.NextValue ?? 1;
+
+                // Build route name with sequence number
                 var routeId = Guid.NewGuid();
-                var evt = new RouteCreated(routeId, dto.Name, dto.DropOffPoint);
+                var routeName = string.IsNullOrWhiteSpace(dto.AreaName) ? dto.AreaName : $"{dto.AreaName} - {currentSeq}";
+
+                // Start route stream
+                var evt = new RouteCreated(routeId, routeName, dto.DropOffPoint);
                 session.Events.StartStream<Domain.Route>(routeId, evt);
+
+                // Emit RouteCreatedInArea to area sequence stream (start new if missing)
+                var areaEvent = new RouteCreatedInArea(dto.AreaId);
+                if (areaSeq is null)
+                {
+                    session.Events.StartStream<RouteAreaSequence>(dto.AreaId, areaEvent);
+                }
+                else
+                {
+                    session.Events.Append(dto.AreaId, areaEvent);
+                }
+
                 await session.SaveChangesAsync();
                 return Results.Created($"/routes/{routeId}", routeId);
             });

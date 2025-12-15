@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
 import RouteList from '../components/RouteList';
 import UnassignedStopList from '../components/UnassignedStopList';
-import CreateRouteForm from '../components/CreateRouteForm';
 import { DroppableTeam } from '../components/DroppableTeam';
 import { TeamSummary } from '../../teams/types/TeamSummary';
-import DroppableRoute from '../components/DroppableRoute';
 import DraggableStop from '../components/DraggableStop';
-import DroppableUnassignRoute from '../components/DroppableUnassignRoute';
 import DroppableContainer from '../components/DroppableContainer';
+import DraggableTeam from '../components/DraggableTeam';
+import DraggableRoute from '../components/DraggableRoute';
+import DraggableCapacityIcon from '../components/DraggableCapacityIcon';
+import { TrashIcon } from '@heroicons/react/24/outline';
+import { getTrailerCapacity } from '../functions/TrailerFunctions';
 
 export interface RouteSummary {
     id: string;
@@ -31,7 +33,25 @@ export interface StopSummary {
     routeId: string | null;
     deleted: boolean;
     status: "Pending" | "Completed" | "NotFound";
+    areaId: string;
+    areaName?: string; // added client-side dto field for area naming
 }
+
+// Discriminated union for a single dragged item
+type TrailerKind = 'small' | 'large' | 'boogie';
+type DraggedItem =
+    | { type: 'stop'; stop: StopSummary }
+    | { type: 'route'; route: RouteSummary }
+    | { type: 'team'; team: TeamSummary }
+    | { type: 'capacity'; kind: TrailerKind; capacity: number };
+
+// General hovered item state
+type HoveredItem =
+    | { type: 'route'; routeId: string }
+    | { type: 'unassign-stop'; capacity: number }
+    | { type: 'team'; teamId: string }
+    | { type: 'unassign-route' }
+    | { type: 'trash-route' };
 
 const RouteManagementPage: React.FC = () => {
     const [routes, setRoutes] = useState<RouteSummary[]>([]);
@@ -39,9 +59,8 @@ const RouteManagementPage: React.FC = () => {
     const [teams, setTeams] = useState<TeamSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [draggedStop, setDraggedStop] = useState<StopSummary | null>(null);
-    const [draggedRoute, setDraggedRoute] = useState<RouteSummary | null>(null);
-    const [hoveredRouteId, setHoveredRouteId] = useState<string | null>(null);
+    const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null);
+    const [hoveredItem, setHoveredItem] = useState<HoveredItem | null>(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -75,119 +94,335 @@ const RouteManagementPage: React.FC = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ position: 0 })
         });
-        fetchData();
     };
 
     const handleUnassignStop = async (stopId: string) => {
         await fetch(`/api/stops/${stopId}/unassign`, { method: 'POST' });
-        fetchData();
     };
 
     const handleAssignRouteToTeam = async (routeId: string, teamId: string) => {
         await fetch(`/api/routes/${routeId}/assign-team/${teamId}`, { method: 'POST' });
-        fetchData();
     };
 
     const handleUnassignRouteFromTeam = async (routeId: string) => {
         await fetch(`/api/routes/${routeId}/unassign-team`, { method: 'POST' });
-        fetchData();
+    };
+
+    const handleDeleteRoute = async (routeId: string) => {
+        await fetch(`/api/routes/${routeId}`, { method: 'DELETE' });
     };
 
     const handleDragStart = (event: any) => {
-        const id = event.active?.id as string;
-        // Distinguish between stop and route by prefix
-        if (id.startsWith('route-')) {
-            const routeId = id.replace('route-', '');
-            setDraggedRoute(routes.find(r => r.id === routeId) || null);
-        } else {
-            const stop = stops.find(s => s.id === id);
-            setDraggedStop(stop || null);
+        const [type, id] = (event.active?.id as string ?? '').split('/', 2);
+
+        switch (type) {
+            case 'route': {
+                const route = routes.find(r => r.id === id);
+                if (route) setDraggedItem({ type: 'route', route });
+                break;
+            }
+            case 'team': {
+                const team = teams.find(t => t.id === id);
+                if (team) setDraggedItem({ type: 'team', team });
+                break;
+            }
+            case 'capacity': {
+                const kind = id as TrailerKind;
+                const capacity = getTrailerCapacity(kind);
+                setDraggedItem({ type: 'capacity', kind, capacity });
+                break;
+            }
+            case 'stop': {
+                const stop = stops.find(s => s.id === id);
+                if (stop) setDraggedItem({ type: 'stop', stop });
+                break;
+            }
         }
     };
 
     const handleDragOver = (event: any) => {
         const { active, over } = event;
-        if (!active || !over) return;
-        console.log(event);
-
-        const overId = over.id as string;
-
-        setHoveredRouteId(overId || null);
-    };
-
-    const handleDragEnd = (event: any) => {
-        const { active, over } = event;
-        setDraggedStop(null);
-        setDraggedRoute(null);
-        if (!active || !over) return;
-
-        const activeId = active.id as string;
-        const overId = over.id as string;
-
-        // Stop dropped on route or unassign zone
-        if (!activeId.startsWith('route-')) {
-            if (overId === 'unassign') {
-                handleUnassignStop(activeId);
-            } else {
-                handleAssignStop(activeId, overId);
-            }
+        if (!active || !over) {
+            setHoveredItem(null);
             return;
         }
+        const [overType, overId] = (over.id as string).split('/', 2);
 
-        // Route dropped on team or unassign
-        if (activeId.startsWith('route-') && overId.startsWith('team-')) {
-            const routeId = activeId.replace('route-', '');
-            const teamId = overId.replace('team-', '');
-            handleAssignRouteToTeam(routeId, teamId);
+        // Build a hovered item from the droppable target
+        switch (overType) {
+            case 'route':
+                setHoveredItem({ type: 'route', routeId: overId });
+                break;
+            case 'team':
+                setHoveredItem({ type: 'team', teamId: overId });
+                break;
+            case 'unassign':
+                if (overId === 'stop') {
+                    const capacity = draggedItem?.type === 'team'
+                        ? getTrailerCapacity(draggedItem.team.trailerSize)
+                        : draggedItem?.type === 'capacity'
+                            ? draggedItem.capacity
+                            : 0;
+                    setHoveredItem({ type: 'unassign-stop', capacity });
+                } else if (overId === 'route') {
+                    setHoveredItem({ type: 'unassign-route' });
+                } else {
+                    setHoveredItem(null);
+                }
+                break;
+            case 'trash':
+                if (overId === 'route') setHoveredItem({ type: 'trash-route' });
+                else setHoveredItem(null);
+                break;
+            default:
+                setHoveredItem(null);
+                break;
         }
-        if (activeId.startsWith('route-') && overId === 'route-unassign') {
-            const routeId = activeId.replace('route-', '');
-            handleUnassignRouteFromTeam(routeId);
+    };
+
+    // Select stops based on tree capacity (sum of amounts <= capacity)
+    const selectStopsByTreeCapacity = (capacity: number) => {
+        const candidate = stops.filter(s => !s.routeId && !s.deleted && s.status === 'Pending');
+        const selected: StopSummary[] = [];
+        let sum = 0;
+        let areaId: string | null = null;
+
+        for (const s of candidate) {
+            if (areaId === null) areaId = s.areaId;
+            if (areaId !== s.areaId) break;
+
+            const amt = s.amount || 0;
+            if (sum + amt <= capacity) {
+                selected.push(s);
+                sum += amt;
+            } else {
+                break;
+            }
         }
+        return selected;
+    };
+
+    const createRouteFromUnassignedCapacity = async (capacity: number) => {
+        const selected = selectStopsByTreeCapacity(capacity);
+        if (selected.length === 0) return;
+        const createRes = await fetch('/api/routes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ areaId: selected[0].areaId, areaName: selected[0].areaName, dropOffPoint: 'Almindsøhytten' })
+        });
+        const routeId = await createRes.json();
+        if (!routeId) return;
+        for (const stop of selected) {
+            await handleAssignStop(stop.id, routeId);
+        }
+        await fetchData();
+    };
+
+    const createRouteForTeamFromUnassigned = async (team: TeamSummary, capacity: number) => {
+        const selected = selectStopsByTreeCapacity(capacity);
+        if (selected.length === 0) return;
+
+        const createRes = await fetch('/api/routes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ areaId: selected[0].areaId, areaName: selected[0].areaName, dropOffPoint: 'Almindsøhytten' })
+        });
+        const routeId = await createRes.json();
+        if (!routeId) return;
+
+        for (const stop of selected) {
+            await handleAssignStop(stop.id, routeId);
+        }
+
+        await handleAssignRouteToTeam(routeId, team.id);
+        await fetchData();
+    };
+
+    const handleDragEnd = async (event: any) => {
+        const { active, over } = event;
+        setDraggedItem(null);
+        setHoveredItem(null);
+        if (!active || !over) return;
+
+        const [overType, overId] = (over.id as string).split('/', 2);
+        const [activeType, activeId] = (active.id as string).split('/', 2);
+
+        switch (activeType) {
+            case 'capacity': {
+                const kind = activeId as TrailerKind;
+                const capacity = getTrailerCapacity(kind);
+                await createRouteFromUnassignedCapacity(capacity);
+                break;
+            }
+            case 'team': {
+                if (overType === 'unassign' && overId === 'stop') {
+                    const team = teams.find(t => t.id === activeId);
+                    if (team) {
+                        const capacity = getTrailerCapacity(team.trailerSize);
+                        await createRouteForTeamFromUnassigned(team, capacity);
+                    }
+                } else if (overType === 'route') {
+                    const team = teams.find(t => t.id === activeId);
+                    const route = routes.find(r => r.id === overId);
+                    if (team && route) {
+                        const capacity = getTrailerCapacity(team.trailerSize);
+                        const routeStops = stops.filter(s => s.routeId === route.id);
+                        const incompleteStops = routeStops.filter(s => s.status !== 'Completed');
+                        const totalIncomplete = incompleteStops.reduce((sum, s) => sum + (s.amount || 0), 0);
+                        const noneCompleted = routeStops.every(s => s.status !== 'Completed');
+
+                        if (noneCompleted && totalIncomplete <= capacity) {
+                            // Option 1: assign the whole route to the team
+                            await handleAssignRouteToTeam(route.id, team.id);
+                        } else {
+                            // Option 2: create a new route with incomplete stops up to capacity and assign to team
+                            let cumulative = 0;
+                            const selected: StopSummary[] = [];
+                            for (const s of incompleteStops) {
+                                const amt = s.amount || 0;
+                                if (cumulative + amt <= capacity) {
+                                    selected.push(s);
+                                    cumulative += amt;
+                                } else {
+                                    break;
+                                }
+                            }
+                            const base = selected[0];
+                            if (base && selected.length > 0) {
+                                const createRes = await fetch('/api/routes', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ areaId: base.areaId, areaName: base.areaName, dropOffPoint: route.dropOffPoint })
+                                });
+                                const newRouteId = await createRes.json();
+                                if (newRouteId) {
+                                    for (const stop of selected) {
+                                        await handleAssignStop(stop.id, newRouteId);
+                                    }
+                                    await handleAssignRouteToTeam(newRouteId, team.id);
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            case 'route': {
+                if (overType === 'team') {
+                    await handleAssignRouteToTeam(activeId, overId);
+                } else if (overType === 'unassign' && overId === 'route') {
+                    await handleUnassignRouteFromTeam(activeId);
+                } else if (overType === 'trash' && overId === 'route') {
+                    await handleDeleteRoute(activeId);
+                } else {
+                    return;
+                }
+                break;
+            }
+            case 'stop': {
+                if (overType === 'route') {
+                    await handleAssignStop(activeId, overId);
+                } else if (overType === 'unassign' && overId === 'stop') {
+                    await handleUnassignStop(activeId);
+                } else {
+                    return;
+                }
+                break;
+            }
+            default:
+                return;
+        }
+
+        fetchData();
+    };
+
+    const handleDragCancel = () => {
+        setDraggedItem(null);
+        setHoveredItem(null);
     };
 
     const unassignedStops = stops.filter(s => !s.routeId && !s.deleted);
 
+    const isDraggingRoute = draggedItem?.type === 'route';
+    const hoveredRouteId = hoveredItem?.type === 'route' ? hoveredItem.routeId : null;
+    const highlightUnassignedCount = hoveredItem?.type === 'unassign-stop' ? hoveredItem.capacity : 0;
+
+    // Highlight for routes when dragging a team or capacity and hovering a route
+    const highlightRouteCount = hoveredRouteId && draggedItem && (draggedItem.type === 'team' || draggedItem.type === 'capacity')
+        ? (draggedItem.type === 'team' ? getTrailerCapacity(draggedItem.team.trailerSize) : draggedItem.capacity)
+        : 0;
+
     return (
-        <DndContext onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
-            <div>
-                <h1 className="text-2xl font-bold mb-4">Route Management</h1>
-                <CreateRouteForm onCreated={fetchData} />
-                {error && <div className="text-red-600">{error}</div>}
+        <DndContext onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
+            <div className="p-3 lg:p-4">
+                <h1 className="text-2xl font-bold mb-3">Dispatch</h1>
+                {error && <div className="text-red-600 mb-2">{error}</div>}
                 {loading ? (
                     <div>Loading...</div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="lg:col-span-1">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="md:col-span-1">
+                            <h2 className="text-xl font-semibold mb-2">Stops</h2>
+                            <div className="flex gap-2 mb-2">
+                                {/* Draggable capacity icons */}
+                                <DraggableCapacityIcon kind="small" />
+                                <DraggableCapacityIcon kind="large" />
+                                <DraggableCapacityIcon kind="boogie" />
+                            </div>
+                            <DroppableContainer id="unassign/stop">
+                                <div className="text-xs text-gray-500 mb-2">Drag a team or capacity icon here to create a fitting route</div>
+                                <UnassignedStopList stops={unassignedStops} highlightCount={highlightUnassignedCount} />
+                            </DroppableContainer>
+                        </div>
+
+                        <div className="md:col-span-1">
+                            <h2 className="text-xl font-semibold mb-2">Routes</h2>
+                            <DroppableContainer id="unassign/route">
+                                <div className="text-xs text-gray-500 mb-2">Drop route here to clear team</div>
+                                <RouteList routes={routes.filter(r => !r.teamId).map(r => ({ ...r, id: r.id }))} stops={stops} teams={teams} />
+                            </DroppableContainer>
+                            {/* Trash droppable with fade animation; visible only when dragging a route */}
+                            <div
+                                className={`mt-3 transition-opacity duration-200 ${isDraggingRoute ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                                aria-hidden={!isDraggingRoute}
+                            >
+                                <DroppableContainer id="trash/route">
+                                    <div className="w-20 h-20 rounded-full border border-red-300 bg-red-100 flex items-center justify-center mx-auto">
+                                        <TrashIcon className="w-10 h-10 text-red-700" />
+                                    </div>
+                                </DroppableContainer>
+                            </div>
+                        </div>
+
+                        <div className="md:col-span-1">
                             <h2 className="text-xl font-semibold mb-2">Teams</h2>
                             <div className="border border-gray-400 rounded p-3 mb-4">
                                 <div className="text-xs text-gray-500 mb-2">Drag a route onto a team to assign. Drag a route onto "Routes" to clear team.</div>
-                                {teams.map(t =>
-                                    <DroppableTeam key={t.id} team={t} routes={routes.filter(r => r.teamId === t.id)} stops={stops} onUnassign={handleUnassignStop} hoveredRouteId={hoveredRouteId} />
-                                )}
+                                {teams.map(t => (
+                                    <DroppableTeam key={t.id} team={t} routes={routes.filter(r => r.teamId === t.id)} stops={stops} teams={teams} />
+                                ))}
                             </div>
                         </div>
-                        <div className="lg:col-span-1">
-                            <h2 className="text-xl font-semibold mb-2">Routes</h2>
-                            <DroppableContainer id="route-unassign">Drop here to unassign route</DroppableContainer>
-                            <RouteList routes={routes.filter(r => !r.teamId).map(r => ({ ...r, id: r.id }))} stops={stops} onUnassign={handleUnassignStop} hoveredRouteId={hoveredRouteId} />
-                        </div>
-                        <div className="lg:col-span-1">
-                            <h2 className="text-xl font-semibold mb-2">Unassigned Stops</h2>
-                            <UnassignedStopList stops={unassignedStops} />
-                        </div>
                     </div>
-                )}
-            </div>
+                )
+                }
+            </div >
             <DragOverlay>
-                {draggedStop && (
-                    <DraggableStop stop={draggedStop} />
+                {draggedItem?.type === 'stop' && (
+                    <DraggableStop stop={draggedItem.stop} />
                 )}
-                {draggedRoute && (
-                    <div className="p-2 border bg-indigo-50 rounded shadow">Route: {draggedRoute.name}</div>
+                {draggedItem?.type === 'route' && (
+                    <DraggableRoute route={draggedItem.route} />
+                )}
+                {draggedItem?.type === 'team' && (
+                    <DraggableTeam team={draggedItem.team} />
+                )}
+                {draggedItem?.type === 'capacity' && (
+                    <DraggableCapacityIcon kind={draggedItem.kind} />
                 )}
             </DragOverlay>
-        </DndContext>
+        </DndContext >
+
     );
 };
 

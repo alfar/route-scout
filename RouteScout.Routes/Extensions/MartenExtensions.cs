@@ -1,5 +1,6 @@
 ﻿using Marten;
 using Marten.Events.Projections;
+using RouteScout.Routes.Domain;
 using RouteScout.Routes.Domain.Events;
 using RouteScout.Routes.Projections;
 
@@ -33,7 +34,11 @@ namespace RouteScout.Routes.Extensions
             opts.Events.AddEventType<RouteExtraTreesRemoved>();
             opts.Events.AddEventType<RouteCutShort>();
 
+            // Register RouteAreaSequence events
+            opts.Events.AddEventType<RouteCreatedInArea>();
+
             // Register projections as snapshots
+            opts.Projections.Snapshot<RouteAreaSequence>(SnapshotLifecycle.Inline);
             opts.Projections.Snapshot<StopSummary>(SnapshotLifecycle.Inline);
             opts.Projections.Snapshot<RouteSummary>(SnapshotLifecycle.Inline);
         }

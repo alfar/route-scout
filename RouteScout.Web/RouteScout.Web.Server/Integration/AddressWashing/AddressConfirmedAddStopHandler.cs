@@ -46,8 +46,13 @@ namespace RouteScout.Web.Server.Integration.AddressWashing
 
             // Calculate sort order using StreetCatalog (lookup by name)
             var street = await _catalog.GetStreetByNameAsync(selectedAddress.Street);
+
+            if (street is null) return;
+
             var segments = street is not null ? await _catalog.GetSegmentsByStreetAsync(street.Id) : Array.Empty<RouteScout.StreetCatalog.Domain.Segment>();
             var area = street is not null ? await _catalog.GetAreaByIdAsync(street.AreaId) : null;
+
+            if (area is null) return;
 
             int houseNumber = ParseHouseNumber(selectedAddress.Number);
             int segmentSort = 0;
@@ -67,7 +72,7 @@ namespace RouteScout.Web.Server.Integration.AddressWashing
 
             int sortOrder = CombineSort(area?.SortOrder ?? 0, street?.SortOrder ?? 0, segmentSort, withinSegment);
 
-            await _stopService.CreateStop(selectedAddress.Id, selectedAddress.StreetId, selectedAddress.Street, selectedAddress.Number, candidate.Amount, sortOrder);
+            await _stopService.CreateStop(selectedAddress.Id, selectedAddress.StreetId, selectedAddress.Street, selectedAddress.Number, candidate.Amount, sortOrder, area!.Id, area!.Name);
         }
 
         private static int ParseHouseNumber(string number)

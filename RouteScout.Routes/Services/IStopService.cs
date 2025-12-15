@@ -2,6 +2,6 @@
 {
     public interface IStopService
     {
-        Task CreateStop(Guid addressId, Guid streetId, string streetName, string houseNumber, int amount, int sortOrder);
+        Task CreateStop(Guid addressId, Guid streetId, string streetName, string houseNumber, int amount, int sortOrder, Guid areaId, string areaName);
     }
 }

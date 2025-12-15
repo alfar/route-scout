@@ -7,19 +7,17 @@ export interface DraggableStopProps {
     stop: StopSummary;
 }
 
-export const DraggableStop: React.FC<DraggableStopProps> = ({
-    stop
-}) => {
-    const { attributes, listeners, setNodeRef, active } = useDraggable({ id: stop.id });
+export const DraggableStop: React.FC<DraggableStopProps> = ({ stop }) => {
+    const { attributes, listeners, setNodeRef, active } = useDraggable({ id: `stop/${stop.id}` });
 
     const icon = (stop: StopSummary) => {
         switch (stop.status) {
-            case "Pending":
-                return <ForwardIcon className="size-6 text-gray-300"></ForwardIcon>;
-            case "Completed":
+            case 'Pending':
+                return <ForwardIcon className="size-6 text-gray-300" />;
+            case 'Completed':
                 return <CheckIcon className="size-6 text-green-500" />;
-            case "NotFound":
-                return <ExclamationTriangleIcon className="size-6 text-red-500" />
+            case 'NotFound':
+                return <ExclamationTriangleIcon className="size-6 text-red-500" />;
         }
     };
 
@@ -28,14 +26,13 @@ export const DraggableStop: React.FC<DraggableStopProps> = ({
             ref={setNodeRef}
             {...listeners}
             {...attributes}
-            style={{
-                opacity: active ? 0.5 : 1,
-            }}
-            className="flex cursor-grab p-1 border-gray-300 rounded mb-1"
+            className="flex items-center gap-3 cursor-grab p-4 border border-gray-200 rounded bg-white"
         >
-            <HomeIcon className="size-6 mr-2 text-gray-500" />
-            <div className="text-left flex-grow">{stop.streetName} {stop.houseNumber}</div>
-            <div className="mr-2">{stop.amount}</div>
+            <HomeIcon className="size-7 text-gray-500" />
+            <div className="text-left flex-grow">
+                <div className="font-medium text-base">{stop.streetName} {stop.houseNumber}</div>
+                <div className="text-xs text-gray-500">Trees: {stop.amount}</div>
+            </div>
             <div>{icon(stop)}</div>
         </div>
     );

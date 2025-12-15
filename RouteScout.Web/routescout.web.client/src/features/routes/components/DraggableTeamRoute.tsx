@@ -7,7 +7,7 @@ interface DraggableTeamRouteProps {
 }
 
 export const DraggableTeamRoute: React.FC<DraggableTeamRouteProps> = ({ route }) => {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `route-${route.id}` });
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `route/${route.id}` });
   return (
     <div
       ref={setNodeRef}

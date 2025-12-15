@@ -2,6 +2,6 @@
 {
     public static class PaymentConstants
     {
-        public const int PricePerTree = 40;
+        public const int PricePerTree = 20;
     }
 }

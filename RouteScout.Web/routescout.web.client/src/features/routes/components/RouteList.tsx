@@ -1,22 +1,24 @@
 import React from 'react';
 import { RouteSummary, StopSummary } from '../pages/RouteManagementPage';
 import DroppableRoute from './DroppableRoute';
-import DraggableStop from './DraggableStop';
-import { useDraggable } from '@dnd-kit/core';
+import { TeamSummary } from '../../teams/types/TeamSummary';
 
 interface Props {
     routes: RouteSummary[];
     stops: StopSummary[];
-    onUnassign: (routeId: string, stopId: string) => void;
-    hoveredRouteId?: string | null;
+    teams: TeamSummary[];
 }
 
-const RouteList: React.FC<Props> = ({ routes, stops, onUnassign, hoveredRouteId }) => {
+const RouteList: React.FC<Props> = ({ routes, stops, teams }) => {
     return (
-        <div>
+        <div className="space-y-3">
             {routes.map(route => (
-                <DroppableRoute key={route.id} route={route} stops={stops} isOver={hoveredRouteId === route.id}>
-                </DroppableRoute>
+                <DroppableRoute
+                    key={route.id}
+                    route={route}
+                    stops={stops}
+                    teams={teams}
+                />
             ))}
         </div>
     );

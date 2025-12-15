@@ -1,4 +1,5 @@
-﻿using RouteScout.Routes.Domain.Events;
+﻿using RouteScout.Routes.Domain;
+using RouteScout.Routes.Domain.Events;
 
 namespace RouteScout.Routes.Projections
 {
@@ -14,6 +15,8 @@ namespace RouteScout.Routes.Projections
         public bool Deleted { get; set; }
         public StopStatus Status { get; set; }
         public int SortOrder { get; set; }
+        public string AreaName { get; set; } = string.Empty;
+        public Guid AreaId { get; set; }
 
         public static StopSummary Create(StopCreated e) => new()
         {
@@ -26,16 +29,20 @@ namespace RouteScout.Routes.Projections
             RouteId = null,
             Deleted = false,
             Status = StopStatus.Pending,
-            SortOrder = e.SortOrder
+            SortOrder = e.SortOrder,
+            AreaId = e.AreaId,
+            AreaName = e.AreaName
         };
 
         public void Apply(StopAssignedToRoute e)
         {
+            Status = StopStatus.Pending;
             RouteId = e.RouteId;
         }
 
         public void Apply(StopUnassignedFromRoute e)
         {
+            Status = StopStatus.Pending;
             RouteId = null;
         }
 
@@ -58,12 +65,5 @@ namespace RouteScout.Routes.Projections
         {
             Status = StopStatus.Pending;
         }
-    }
-
-    public enum StopStatus
-    {
-        Pending = 0,
-        Completed = 1,
-        NotFound = 2
     }
 }

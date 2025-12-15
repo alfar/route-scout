@@ -13,6 +13,7 @@ namespace RouteScout.Routes.Projections
         public Guid? TeamId { get; set; } // assigned team
         public int ExtraTrees { get; set; }
         public bool CutShort { get; set; }
+        public bool Completed { get; set; }
 
         public static RouteSummary Create(RouteCreated e) => new()
         {
@@ -24,7 +25,8 @@ namespace RouteScout.Routes.Projections
             Deleted = false,
             TeamId = null,
             ExtraTrees = 0,
-            CutShort = false
+            CutShort = false,
+            Completed = false
         };
 
         public void Apply(RouteRenamed e) => Name = e.NewName;
@@ -83,11 +85,17 @@ namespace RouteScout.Routes.Projections
         public void Apply(RouteExtraTreesRemoved e)
         {
             ExtraTrees -= e.Amount;
+            if (ExtraTrees < 0) ExtraTrees = 0;
         }
 
         public void Apply(RouteCutShort e)
         {
             CutShort = true;
+        }
+
+        public void Apply(RouteCompleted e)
+        {
+            Completed = true;
         }
     }
 

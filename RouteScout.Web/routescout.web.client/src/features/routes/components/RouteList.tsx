@@ -7,9 +7,10 @@ interface Props {
     routes: RouteSummary[];
     stops: StopSummary[];
     teams: TeamSummary[];
+    completed?: boolean;
 }
 
-const RouteList: React.FC<Props> = ({ routes, stops, teams }) => {
+const RouteList: React.FC<Props> = ({ routes, stops, teams, completed }) => {
     return (
         <div className="space-y-3">
             {routes.map(route => (
@@ -18,6 +19,7 @@ const RouteList: React.FC<Props> = ({ routes, stops, teams }) => {
                     route={route}
                     stops={stops}
                     teams={teams}
+                    completed={completed}
                 />
             ))}
         </div>

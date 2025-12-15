@@ -14,6 +14,7 @@ public class Route
     public List<RouteStopDetail> StopDetails { get; set; } = new(); // optional detailed view
     public int ExtraTrees { get; set; } // additional trees picked up outside planned stops
     public bool CutShort { get; set; } // indicates route was cut short
+    public bool Completed { get; set; } // indicates route was completed
 
     // Apply methods for event sourcing
     public void Apply(RouteCreated e)
@@ -27,6 +28,7 @@ public class Route
         TeamId = null;
         ExtraTrees = 0;
         CutShort = false;
+        Completed = false;
     }
 
     public void Apply(RouteRenamed e)
@@ -101,11 +103,17 @@ public class Route
     public void Apply(RouteExtraTreesRemoved e)
     {
         ExtraTrees -= e.Amount;
+        if (ExtraTrees < 0) ExtraTrees = 0;
     }
 
     public void Apply(RouteCutShort e)
     {
         CutShort = true;
+    }
+
+    public void Apply(RouteCompleted e)
+    {
+        Completed = true;
     }
 }
 

@@ -117,7 +117,7 @@ namespace RouteScout.Routes.Extensions
             routeGroup.MapGet("/team/{teamId:guid}", async (IDocumentSession session, Guid teamId) =>
             {
                 var teamRoutes = await session.Query<RouteSummary>()
-                    .Where(r => r.TeamId == teamId && !r.Deleted)
+                    .Where(r => r.TeamId == teamId && !r.Deleted && !r.Completed)
                     .ToListAsync();
                 return Results.Ok(teamRoutes);
             });
@@ -319,6 +319,21 @@ namespace RouteScout.Routes.Extensions
                     await handler.HandleAsync(@event);
                 }
 
+                return Results.Ok();
+            });
+
+            // New: route completed endpoint
+            routeGroup.MapPost("/{id:guid}/completed", async (IDocumentSession session, Guid id) =>
+            {
+                var route = await session.LoadAsync<RouteSummary>(id);
+                if (route is null || route.Deleted) return Results.NotFound();
+                if (route.Completed) return Results.Ok(); // idempotent
+                // Ensure all stops in the route are completed
+                var stops = await session.Query<StopSummary>().Where(s => s.RouteId == id && !s.Deleted).ToListAsync();
+                var allCompleted = stops.Count > 0 && stops.All(s => s.Status == StopStatus.Completed);
+                if (!allCompleted) return Results.BadRequest("All stops must be completed to mark route as completed");
+                session.Events.Append(id, new RouteCompleted(id));
+                await session.SaveChangesAsync();
                 return Results.Ok();
             });
 

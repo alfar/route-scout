@@ -28,11 +28,12 @@ namespace RouteScout.Routes.Extensions
             opts.Events.AddEventType<RouteSplitPerformed>();
             opts.Events.AddEventType<RouteMerged>();
             opts.Events.AddEventType<RouteDeleted>();
-            opts.Events.AddEventType<RouteAssignedToTeam>(); // added
-            opts.Events.AddEventType<RouteUnassignedFromTeam>(); // added
+            opts.Events.AddEventType<RouteAssignedToTeam>();
+            opts.Events.AddEventType<RouteUnassignedFromTeam>();
             opts.Events.AddEventType<RouteExtraTreesAdded>();
             opts.Events.AddEventType<RouteExtraTreesRemoved>();
             opts.Events.AddEventType<RouteCutShort>();
+            opts.Events.AddEventType<RouteCompleted>();
 
             // Register RouteAreaSequence events
             opts.Events.AddEventType<RouteCreatedInArea>();

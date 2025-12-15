@@ -22,7 +22,8 @@ export const DroppableTeam: React.FC<DroppableTeamProps> = ({ team, routes, stop
             </div>
             {routes.length === 0 && <div className="text-xs text-gray-400">No routes</div>}
             <div className="flex flex-col gap-2">
-                <RouteList routes={routes} stops={stops} teams={teams}></RouteList>
+                <RouteList routes={routes.filter(r => !r.completed)} stops={stops} teams={teams}></RouteList>
+                <RouteList routes={routes.filter(r => r.completed)} stops={stops} teams={teams} completed={true}></RouteList>
             </div>
         </DroppableContainer>
     );

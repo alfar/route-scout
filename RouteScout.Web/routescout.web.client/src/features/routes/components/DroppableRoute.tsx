@@ -12,13 +12,14 @@ interface DroppableRouteProps {
     route: RouteSummary;
     stops: StopSummary[];
     teams: TeamSummary[];
+    completed?: boolean;
 }
 
-const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, stops, teams }) => {
-    const [expanded, setExpanded] = useState(true);
+const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, stops, teams, completed = false }) => {
+    const [expanded, setExpanded] = useState(!completed);
     const { active, over } = useDndContext();
 
-    const highlightCount = useMemo(() => {
+    const highlightCount = completed ? 0 : useMemo(() => {
         if (active && over) {
             const [activeType, activeId] = (active.id as string).split('/', 2);
             const [overType, overId] = (over.id as string).split('/', 2);
@@ -43,8 +44,8 @@ const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, stops, teams }) 
 
     return (
         <DroppableContainer id={`route/${route.id}`}>
-            <div className="flex items-center justify-between mb-2">
-                <DraggableRouteLabel route={route} />
+            <div className="flex items-center justify-between">
+                <DraggableRouteLabel route={route} completed={completed} />
                 <button
                     className="flex items-center gap-2 text-sm text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 active:bg-gray-200"
                     onClick={(e) => { e.stopPropagation(); setExpanded(v => !v); }}
@@ -56,7 +57,7 @@ const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, stops, teams }) 
                     <span className="font-medium">{completedTrees}/{totalTrees}</span>
                 </button>
             </div>
-            <div className="text-xs text-left text-gray-600 mb-2">Drop-off: {route.dropOffPoint}</div>
+            {!completed && <div className="text-xs text-left text-gray-600 mb-2">Drop-off: {route.dropOffPoint}</div>}
             {expanded && (
                 <StopList stops={routeStops} highlightCount={highlightCount} />
             )}

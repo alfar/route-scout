@@ -11,6 +11,7 @@ import DraggableRoute from '../components/DraggableRoute';
 import DraggableCapacityIcon from '../components/DraggableCapacityIcon';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { getTrailerCapacity } from '../functions/TrailerFunctions';
+import { CheckIcon } from '@heroicons/react/24/outline';
 
 export interface RouteSummary {
     id: string;
@@ -21,6 +22,7 @@ export interface RouteSummary {
     teamId?: string | null;
     extraTrees?: number;
     cutShort?: boolean;
+    completed: boolean;
 }
 
 export interface StopSummary {
@@ -110,6 +112,10 @@ const RouteManagementPage: React.FC = () => {
 
     const handleDeleteRoute = async (routeId: string) => {
         await fetch(`/api/routes/${routeId}`, { method: 'DELETE' });
+    };
+
+    const handleCompleteRoute = async (routeId: string) => {
+        await fetch(`/api/routes/${routeId}/completed`, { method: 'POST' });
     };
 
     const handleDragStart = (event: any) => {
@@ -314,6 +320,8 @@ const RouteManagementPage: React.FC = () => {
                     await handleUnassignRouteFromTeam(activeId);
                 } else if (overType === 'trash' && overId === 'route') {
                     await handleDeleteRoute(activeId);
+                } else if (overType === 'complete' && overId === 'route') {
+                    await handleCompleteRoute(activeId);
                 } else {
                     return;
                 }
@@ -344,13 +352,8 @@ const RouteManagementPage: React.FC = () => {
     const unassignedStops = stops.filter(s => !s.routeId && !s.deleted);
 
     const isDraggingRoute = draggedItem?.type === 'route';
-    const hoveredRouteId = hoveredItem?.type === 'route' ? hoveredItem.routeId : null;
+    const isDraggingCompletedRoute = isDraggingRoute && !draggedItem.route.completed && stops.every(s => s.routeId === draggedItem!.route.id ? s.deleted || s.status === 'Completed' : true);
     const highlightUnassignedCount = hoveredItem?.type === 'unassign-stop' ? hoveredItem.capacity : 0;
-
-    // Highlight for routes when dragging a team or capacity and hovering a route
-    const highlightRouteCount = hoveredRouteId && draggedItem && (draggedItem.type === 'team' || draggedItem.type === 'capacity')
-        ? (draggedItem.type === 'team' ? getTrailerCapacity(draggedItem.team.trailerSize) : draggedItem.capacity)
-        : 0;
 
     return (
         <DndContext onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
@@ -381,7 +384,6 @@ const RouteManagementPage: React.FC = () => {
                                 <div className="text-xs text-gray-500 mb-2">Drop route here to clear team</div>
                                 <RouteList routes={routes.filter(r => !r.teamId).map(r => ({ ...r, id: r.id }))} stops={stops} teams={teams} />
                             </DroppableContainer>
-                            {/* Trash droppable with fade animation; visible only when dragging a route */}
                             <div
                                 className={`mt-3 transition-opacity duration-200 ${isDraggingRoute ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                                 aria-hidden={!isDraggingRoute}
@@ -389,6 +391,16 @@ const RouteManagementPage: React.FC = () => {
                                 <DroppableContainer id="trash/route">
                                     <div className="w-20 h-20 rounded-full border border-red-300 bg-red-100 flex items-center justify-center mx-auto">
                                         <TrashIcon className="w-10 h-10 text-red-700" />
+                                    </div>
+                                </DroppableContainer>
+                            </div>
+                            <div
+                                className={`mt-3 transition-opacity duration-200 ${isDraggingRoute && isDraggingCompletedRoute ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                                aria-hidden={!isDraggingRoute}
+                            >
+                                <DroppableContainer id="complete/route">
+                                    <div className="w-20 h-20 rounded-full border border-green-300 bg-green-100 flex items-center justify-center mx-auto">
+                                        <CheckIcon className="w-10 h-10 text-green-700" />
                                     </div>
                                 </DroppableContainer>
                             </div>

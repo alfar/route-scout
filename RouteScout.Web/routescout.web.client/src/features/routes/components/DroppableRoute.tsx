@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { RouteSummary, StopSummary } from '../pages/RouteManagementPage';
-import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import DroppableContainer from './DroppableContainer';
 import DraggableRouteLabel from './DraggableRouteLabel';
 import StopList from './StopList';
 import { useDndContext } from '@dnd-kit/core';
 import { TeamSummary } from '../../teams/types/TeamSummary';
 import { getTrailerCapacity } from '../functions/TrailerFunctions';
+import ExpandCounter from './ExpandCounter';
 
 interface DroppableRouteProps {
     route: RouteSummary;
@@ -46,16 +46,12 @@ const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, stops, teams, co
         <DroppableContainer id={`route/${route.id}`}>
             <div className="flex items-center justify-between">
                 <DraggableRouteLabel route={route} completed={completed} />
-                <button
-                    className="flex items-center gap-2 text-sm text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 active:bg-gray-200"
-                    onClick={(e) => { e.stopPropagation(); setExpanded(v => !v); }}
-                    aria-expanded={expanded}
-                    aria-label={expanded ? 'Collapse route details' : 'Expand route details'}
-                    style={{ minHeight: 44 }}
-                >
-                    {expanded ? <ChevronDownIcon className="w-5 h-5" /> : <ChevronRightIcon className="w-5 h-5" />}
-                    <span className="font-medium">{completedTrees}/{totalTrees}</span>
-                </button>
+                <ExpandCounter
+                    expanded={expanded}
+                    onToggle={() => setExpanded(v => !v)}
+                    completed={completedTrees}
+                    total={totalTrees}
+                />
             </div>
             {!completed && <div className="text-xs text-left text-gray-600 mb-2">Drop-off: {route.dropOffPoint}</div>}
             {expanded && (

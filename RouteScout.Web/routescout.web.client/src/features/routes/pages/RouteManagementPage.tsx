@@ -355,10 +355,15 @@ const RouteManagementPage: React.FC = () => {
     const isDraggingCompletedRoute = isDraggingRoute && !draggedItem.route.completed && stops.every(s => s.routeId === draggedItem!.route.id ? s.deleted || s.status === 'Completed' : true);
     const highlightUnassignedCount = hoveredItem?.type === 'unassign-stop' ? hoveredItem.capacity : 0;
 
+    // Tree counts
+    const totalTrees = stops.filter(s => !s.deleted).reduce((sum, s) => sum + (s.amount || 0), 0);
+    const completedTrees = stops.filter(s => !s.deleted && s.status === 'Completed').reduce((sum, s) => sum + (s.amount || 0), 0);
+
     return (
         <DndContext onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
             <div className="p-3 lg:p-4">
-                <h1 className="text-2xl font-bold mb-3">Dispatch</h1>
+                <h1 className="text-2xl font-bold mb-1">Dispatch</h1>
+                <div className="text-sm text-gray-700 mb-3">{completedTrees} / {totalTrees} trees</div>
                 {error && <div className="text-red-600 mb-2">{error}</div>}
                 {loading ? (
                     <div>Loading...</div>
@@ -366,7 +371,7 @@ const RouteManagementPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="md:col-span-1">
                             <h2 className="text-xl font-semibold mb-2">Stops</h2>
-                            <div className="flex gap-2 mb-2">
+                            <div className="flex gap-2 mb-2 justify-items-stretch">
                                 {/* Draggable capacity icons */}
                                 <DraggableCapacityIcon kind="small" />
                                 <DraggableCapacityIcon kind="large" />

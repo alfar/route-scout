@@ -11,6 +11,7 @@ using RouteScout.Payments.IntegrationPoints;
 using RouteScout.Routes.Extensions;
 using RouteScout.Routes.IntegrationPoints;
 using RouteScout.Routes.Integrations;
+using RouteScout.Stream.Extensions;
 using RouteScout.StreetCatalog.Extensions;
 using RouteScout.StreetCatalog.Services;
 using RouteScout.Teams.Extensions;
@@ -53,6 +54,7 @@ builder.Services.AddMarten(opts =>
     opts.AddPaymentsEventTypesAndProjections();
     opts.AddRoutesEventTypesAndProjections();
     opts.AddTeamsEventTypesAndProjections();
+    opts.AddStreamEventTypesAndProjections();
 
 }).UseLightweightSessions();
 

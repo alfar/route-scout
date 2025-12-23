@@ -1,7 +1,5 @@
 using JasperFx;
-using JasperFx.Events.Projections;
 using Marten;
-using Microsoft.Extensions.Options;
 using RouteScout.AddressWashing.Extensions;
 using RouteScout.AddressWashing.IntegrationPoints;
 using RouteScout.Issues.Extensions;
@@ -31,6 +29,7 @@ builder.Services.AddIssues();
 builder.Services.AddPayments();
 builder.Services.AddRoutes();
 builder.Services.AddTeams();
+builder.Services.AddStream();
 
 builder.Services.AddScoped<IAddressCandidateConfirmedHandler, AddressConfirmedAddStopHandler>();
 builder.Services.AddScoped<IAddressCandidateRejectedHandler, AddressRejectedPaymentResetHandler>();
@@ -54,9 +53,12 @@ builder.Services.AddMarten(opts =>
     opts.AddPaymentsEventTypesAndProjections();
     opts.AddRoutesEventTypesAndProjections();
     opts.AddTeamsEventTypesAndProjections();
-    opts.AddStreamEventTypesAndProjections();
 
-}).UseLightweightSessions();
+    // Add subscriptions
+
+
+}).AddStreamSubscriptions()
+  .UseLightweightSessions();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -86,6 +88,7 @@ app.MapGroup("/api")
     .MapPaymentEndpoints()
     .MapRouteEndpoints()
     .MapStreetCatalogEndpoints()
+    .MapStreamEndpoints()
     .MapTeamEndpoints();
 
 app.MapFallbackToFile("/index.html");

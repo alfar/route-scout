@@ -8,7 +8,7 @@ export interface DraggableStopProps {
 }
 
 export const DraggableStop: React.FC<DraggableStopProps> = ({ stop }) => {
-    const { attributes, listeners, setNodeRef, active } = useDraggable({ id: `stop/${stop.id}` });
+    const { attributes, listeners, setNodeRef } = useDraggable({ id: `drag/stop/${stop.id}` });
 
     const icon = (stop: StopSummary) => {
         switch (stop.status) {
@@ -26,7 +26,7 @@ export const DraggableStop: React.FC<DraggableStopProps> = ({ stop }) => {
             ref={setNodeRef}
             {...listeners}
             {...attributes}
-            className="flex items-center gap-3 cursor-grab p-4 border border-gray-200 rounded bg-white"
+            className="flex items-center gap-3 cursor-grab p-4 border border-gray-200 rounded bg-white touch-none select-none"
         >
             <HomeIcon className="size-7 text-gray-500" />
             <div className="text-left flex-grow">

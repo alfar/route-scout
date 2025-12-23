@@ -11,7 +11,7 @@ interface DraggableCapacityIconProps {
 
 // Draggable icon representing a trailer capacity. Emits ids like `capacity-small|large|boogie`.
 const DraggableCapacityIcon: React.FC<DraggableCapacityIconProps> = ({ kind, label }) => {
-  const { attributes, listeners, setNodeRef } = useDraggable({ id: `capacity/${kind}` });
+  const { attributes, listeners, setNodeRef } = useDraggable({ id: `drag/capacity/${kind}` });
 
   const text = label ?? kind.charAt(0).toUpperCase() + kind.slice(1);
 
@@ -20,7 +20,7 @@ const DraggableCapacityIcon: React.FC<DraggableCapacityIconProps> = ({ kind, lab
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border bg-white cursor-grab select-none"
+      className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border bg-white cursor-grab select-none touch-none"
     >
       <TruckIcon className="w-5 h-5" />
       <span className="text-sm capitalize">{text}</span>

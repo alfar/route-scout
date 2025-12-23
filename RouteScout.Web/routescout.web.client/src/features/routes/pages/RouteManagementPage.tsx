@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { DndContext, DragOverlay } from '@dnd-kit/core';
+import { DndContext, DragOverlay, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import RouteList from '../components/RouteList';
 import UnassignedStopList from '../components/UnassignedStopList';
 import { DroppableTeam } from '../components/DroppableTeam';
 import { TeamSummary } from '../../teams/types/TeamSummary';
-import DraggableStop from '../components/DraggableStop';
 import DroppableContainer from '../components/DroppableContainer';
-import DraggableTeam from '../components/DraggableTeam';
-import DraggableRoute from '../components/DraggableRoute';
 import DraggableCapacityIcon from '../components/DraggableCapacityIcon';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, HomeIcon, ClipboardIcon, UserGroupIcon, TruckIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { getTrailerCapacity } from '../functions/TrailerFunctions';
-import { CheckIcon } from '@heroicons/react/24/outline';
+import { useEventSource } from '../../stream/context/EventSourceContext';
 
 export interface RouteSummary {
     id: string;
@@ -64,6 +61,18 @@ const RouteManagementPage: React.FC = () => {
     const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null);
     const [hoveredItem, setHoveredItem] = useState<HoveredItem | null>(null);
 
+    const es = useEventSource();
+
+    // Prefer PointerSensor first, TouchSensor as fallback
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 6 },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: { delay: 120, tolerance: 8 },
+        })
+    );
+
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -89,6 +98,88 @@ const RouteManagementPage: React.FC = () => {
     useEffect(() => {
         fetchData();
     }, []);
+
+    // Listen for RouteCreated events from SSE and refresh routes
+    useEffect(() => {
+        if (!es) return;
+        const handleRouteCreated = (e: Event) => {
+            const data = (e as MessageEvent).data;
+            try {
+                const json = JSON.parse(data);
+                setRoutes(prev => [...prev, { id: json.routeId, name: json.name, deleted: false, stops: [], dropOffPoint: json.dropOffPoint, cutShort: false, extraTrees: 0, teamId: null, completed: false }]);
+            } catch {
+                console.log('[SSE] RouteCreated', data);
+            }
+        };
+
+        const handleRouteAssignedToTeam = (e: Event) => {
+            const data = (e as MessageEvent).data;
+            try {
+                const json = JSON.parse(data);
+                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, teamId: json.teamId } : r));
+            } catch {
+                console.log('[SSE] RouteAssignedToTeam', data);
+            }
+        }
+
+        const handleRouteUnassignedFromTeam = (e: Event) => {
+            const data = (e as MessageEvent).data;
+            try {
+                const json = JSON.parse(data);
+                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, teamId: null } : r));
+            } catch {
+                console.log('[SSE] RouteUnassignedFromTeam', data);
+            }
+        }
+
+        const handleRouteDeleted = (e: Event) => {
+            const data = (e as MessageEvent).data;
+            try {
+                const json = JSON.parse(data);
+                setStops(prev => prev.map(s => s.routeId === json.routeId ? { ...s, routeId: null } : s));
+                setRoutes(prev => prev.filter(r => r.id !== json.routeId));
+            } catch {
+                console.log('[SSE] RouteCreated', data);
+            }
+        };
+
+        es.addEventListener('RouteCreated', handleRouteCreated);
+        es.addEventListener('RouteDeleted', handleRouteDeleted);
+        es.addEventListener('RouteAssignedToTeam', handleRouteAssignedToTeam);
+        es.addEventListener('RouteUnassignedFromTeam', handleRouteUnassignedFromTeam);
+
+        const handleStopAddedToRoute = (e: Event) => {
+            const data = (e as MessageEvent).data;
+            try {
+                const json = JSON.parse(data);
+                setStops(prev => prev.map(s => s.id === json.stopId ? { ...s, routeId: json.routeId } : s));
+                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, stops: [...r.stops, json.stopId] } : r));
+            } catch {
+                console.log('[SSE] StopAddedToRoute', data);
+            }
+        }
+        const handleStopRemovedFromRoute = (e: Event) => {
+            const data = (e as MessageEvent).data;
+            try {
+                const json = JSON.parse(data);
+                setStops(prev => prev.map(s => s.id === json.stopId ? { ...s, routeId: null } : s));
+                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, stops: r.stops.filter(s => s !== json.stopId) } : r));
+            } catch {
+                console.log('[SSE] StopAddedToRoute', data);
+            }
+        }
+
+        es.addEventListener('StopAddedToRoute', handleStopAddedToRoute);
+        es.addEventListener('StopRemovedFromRoute', handleStopRemovedFromRoute);
+
+        return () => {
+            es.removeEventListener('RouteCreated', handleRouteCreated);
+            es.removeEventListener('RouteDeleted', handleRouteDeleted);
+            es.removeEventListener('RouteAssignedToTeam', handleRouteAssignedToTeam);
+            es.removeEventListener('RouteUnassignedFromTeam', handleRouteUnassignedFromTeam);
+            es.removeEventListener('StopAddedToRoute', handleStopAddedToRoute);
+        };
+    }, [es]);
 
     const handleAssignStop = async (stopId: string, routeId: string) => {
         await fetch(`/api/routes/${routeId}/stops/${stopId}`, {
@@ -119,7 +210,7 @@ const RouteManagementPage: React.FC = () => {
     };
 
     const handleDragStart = (event: any) => {
-        const [type, id] = (event.active?.id as string ?? '').split('/', 2);
+        const [_, type, id] = (event.active?.id as string ?? '').split('/', 3);
 
         switch (type) {
             case 'route': {
@@ -221,7 +312,6 @@ const RouteManagementPage: React.FC = () => {
         for (const stop of selected) {
             await handleAssignStop(stop.id, routeId);
         }
-        await fetchData();
     };
 
     const createRouteForTeamFromUnassigned = async (team: TeamSummary, capacity: number) => {
@@ -241,7 +331,6 @@ const RouteManagementPage: React.FC = () => {
         }
 
         await handleAssignRouteToTeam(routeId, team.id);
-        await fetchData();
     };
 
     const handleDragEnd = async (event: any) => {
@@ -251,7 +340,7 @@ const RouteManagementPage: React.FC = () => {
         if (!active || !over) return;
 
         const [overType, overId] = (over.id as string).split('/', 2);
-        const [activeType, activeId] = (active.id as string).split('/', 2);
+        const [_, activeType, activeId] = (active.id as string).split('/', 3);
 
         switch (activeType) {
             case 'capacity': {
@@ -341,7 +430,7 @@ const RouteManagementPage: React.FC = () => {
                 return;
         }
 
-        fetchData();
+        //fetchData();
     };
 
     const handleDragCancel = () => {
@@ -360,8 +449,8 @@ const RouteManagementPage: React.FC = () => {
     const completedTrees = stops.filter(s => !s.deleted && s.status === 'Completed').reduce((sum, s) => sum + (s.amount || 0), 0);
 
     return (
-        <DndContext onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
-            <div className="p-3 lg:p-4">
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
+            <div className="p-3 lg:p-4 overscroll-contain">
                 <h1 className="text-2xl font-bold mb-1">Dispatch</h1>
                 <div className="text-sm text-gray-700 mb-3">{completedTrees} / {totalTrees} trees</div>
                 {error && <div className="text-red-600 mb-2">{error}</div>}
@@ -426,16 +515,31 @@ const RouteManagementPage: React.FC = () => {
             </div >
             <DragOverlay>
                 {draggedItem?.type === 'stop' && (
-                    <DraggableStop stop={draggedItem.stop} />
+                    <div className="flex items-center gap-3 p-4 border border-gray-200 rounded bg-white min-w-2xs">
+                        <HomeIcon className="size-7 text-gray-500" />
+                        <div className="text-left flex-grow">
+                            <div className="font-medium text-base">{draggedItem.stop.streetName} {draggedItem.stop.houseNumber}</div>
+                            <div className="text-xs text-gray-500">Trees: {draggedItem.stop.amount}</div>
+                        </div>
+                    </div>
                 )}
                 {draggedItem?.type === 'route' && (
-                    <DraggableRoute route={draggedItem.route} />
+                    <div className="flex items-center gap-3 p-4 border border-gray-200 rounded bg-white min-w-2xs">
+                        <ClipboardIcon className="size-6 mr-1" />
+                        <span className="font-semibold text-gray-600">{draggedItem.route.name}</span>
+                    </div>
                 )}
                 {draggedItem?.type === 'team' && (
-                    <DraggableTeam team={draggedItem.team} />
+                    <div className="flex items-center gap-3 p-4 border border-gray-200 rounded bg-white">
+                        <UserGroupIcon className="size-6 mr-1" />
+                        <span className="font-semibold text-gray-600">{draggedItem.team.name}</span>
+                    </div>
                 )}
                 {draggedItem?.type === 'capacity' && (
-                    <DraggableCapacityIcon kind={draggedItem.kind} />
+                    <div className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border bg-white">
+                        <TruckIcon className="w-5 h-5" />
+                        <span className="text-sm capitalize">{draggedItem.kind.charAt(0).toUpperCase() + draggedItem.kind.slice(1)}</span>
+                    </div>
                 )}
             </DragOverlay>
         </DndContext >

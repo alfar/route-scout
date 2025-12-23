@@ -3,8 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <title>Vite + React + TS</title>
+    <style>
+      /* Ensure the app uses full height on mobile and avoids layout jumps */
+      html, body, #root { height: 100%; }
+
+      /* Improve tap interactions and reduce unwanted highlights on iOS */
+      body {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation; /* Allow taps/pinch to behave, while letting components opt-in to touch-action: none */
+      }
+
+      /* Prevent default dragging of images/links interfering with DnD */
+      img, a { -webkit-user-drag: none; user-drag: none; }
+
+      /* Helper utilities you can apply to DnD containers/handles when needed */
+      .touch-none { touch-action: none !important; }
+      .select-none { user-select: none; -webkit-user-select: none; }
+      .overscroll-contain { overscroll-behavior: contain; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

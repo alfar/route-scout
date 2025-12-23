@@ -8,6 +8,7 @@ import RouteManagementPage from './features/routes/pages/RouteManagementPage';
 import TeamsPage from './features/teams/pages/TeamsPage';
 import IssuesStream from './features/issues/components/IssuesStream';
 import StreetCatalogImportPage from './features/street-catalog/pages/StreetCatalogImportPage';
+import SseProvider from './features/stream/components/SseProvider';
 
 export function DispatchApp() {
   return (
@@ -21,18 +22,19 @@ export function DispatchApp() {
         <Link className="text-white font-semibold hover:underline" to="/street-catalog/import">Street Catalog Import</Link>
         <Link className="text-white font-semibold hover:underline" to="/about">About</Link>
       </nav>
-      <main className="p-8 flex flex-col gap-6">
-        <IssuesStream />
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/payments" element={<PaymentsPage />} />
-          <Route path="/address-washing" element={<AddressWashingPage />} />
-          <Route path="/routes" element={<RouteManagementPage />} />
-          <Route path="/teams" element={<TeamsPage />} />
-          <Route path="/street-catalog/import" element={<StreetCatalogImportPage />} />
-          <Route path="/about" element={<AboutPage />} />
-        </Routes>
-      </main>
+      <SseProvider>
+        <main className="p-8 flex flex-col gap-6">
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/payments" element={<PaymentsPage />} />
+            <Route path="/address-washing" element={<AddressWashingPage />} />
+            <Route path="/routes" element={<RouteManagementPage />} />
+            <Route path="/teams" element={<TeamsPage />} />
+            <Route path="/street-catalog/import" element={<StreetCatalogImportPage />} />
+            <Route path="/about" element={<AboutPage />} />
+          </Routes>
+        </main>
+      </SseProvider>
     </div>
   );
 }

@@ -8,13 +8,13 @@ interface DraggableTeamLabelProps {
 }
 
 const DraggableTeamLabel: React.FC<DraggableTeamLabelProps> = ({ team }) => {
-    const { attributes, listeners, setNodeRef } = useDraggable({ id: `team/${team.id}` });
+    const { attributes, listeners, setNodeRef } = useDraggable({ id: `drag/team/${team.id}` });
     return (
         <div
             ref={setNodeRef}
             {...attributes}
             {...listeners}
-            className="font-semibold flex mb-1 text-gray-600 cursor-grab select-none"
+            className="font-semibold flex mb-1 text-gray-600 cursor-grab select-none touch-none"
         >
             <UserGroupIcon className="size-6 mr-1" /> {team.name}
         </div>

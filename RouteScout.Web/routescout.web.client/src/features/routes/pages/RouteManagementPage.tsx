@@ -6,7 +6,7 @@ import { DroppableTeam } from '../components/DroppableTeam';
 import { TeamSummary } from '../../teams/types/TeamSummary';
 import DroppableContainer from '../components/DroppableContainer';
 import DraggableCapacityIcon from '../components/DraggableCapacityIcon';
-import { TrashIcon, HomeIcon, ClipboardIcon, UserGroupIcon, TruckIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, TruckIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { getTrailerCapacity } from '../functions/TrailerFunctions';
 import { useEventSource } from '../../stream/context/EventSourceContext';
 import TeamLabel from '../components/TeamLabel';

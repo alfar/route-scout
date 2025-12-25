@@ -1,5 +1,5 @@
-import { AddressCandidate, WashedAddress } from '../types/AddressCandidate';
-import { AddressSelector, AddressOption } from './AddressSelector';
+import { AddressCandidate } from '../types/AddressCandidate';
+import { AddressSelector } from './AddressSelector';
 import { useState } from 'react';
 
 interface Props {

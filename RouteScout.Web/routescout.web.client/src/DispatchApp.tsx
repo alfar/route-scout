@@ -6,7 +6,6 @@ import DashboardPage from './features/dashboard/pages/DashboardPage';
 import AddressWashingPage from './features/address-washing/pages/AddressWashingPage';
 import RouteManagementPage from './features/routes/pages/RouteManagementPage';
 import TeamsPage from './features/teams/pages/TeamsPage';
-import IssuesStream from './features/issues/components/IssuesStream';
 import StreetCatalogImportPage from './features/street-catalog/pages/StreetCatalogImportPage';
 import SseProvider from './features/stream/components/SseProvider';
 

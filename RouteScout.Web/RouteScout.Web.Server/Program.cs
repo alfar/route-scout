@@ -1,5 +1,6 @@
 using JasperFx;
 using Marten;
+using Microsoft.AspNetCore.HttpOverrides;
 using RouteScout.AddressWashing.Extensions;
 using RouteScout.AddressWashing.IntegrationPoints;
 using RouteScout.Issues.Extensions;
@@ -22,6 +23,27 @@ var builder = WebApplication.CreateBuilder(args);
 // PostgreSQL connection
 var connectionString = builder.Configuration.GetConnectionString("RouteScoutDb")
     ?? "Host=localhost;Database=routescout;Username=postgres;Password=postgres";
+
+var isHeroku = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DYNO"));
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    if (isHeroku)
+    {
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    }
+});
+
+builder.Services.AddHttpsRedirection(options =>
+{
+    if (isHeroku)
+    {
+        options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+        options.HttpsPort = 443;
+    }
+});
 
 // Add services to the container.
 builder.Services.AddAddressWashing();
@@ -68,6 +90,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
@@ -78,6 +101,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();

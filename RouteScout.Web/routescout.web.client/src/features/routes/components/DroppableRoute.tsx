@@ -21,7 +21,7 @@ const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, stops, teams, co
 
     const highlightCount = completed ? 0 : useMemo(() => {
         if (active && over) {
-            const [activeType, activeId] = (active.id as string).split('/', 2);
+            const [_, activeType, activeId] = (active.id as string).split('/', 3);
             const [overType, overId] = (over.id as string).split('/', 2);
 
             if (overType === 'route' && overId === route.id && activeType === 'team') {
@@ -39,11 +39,12 @@ const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, stops, teams, co
         .map(id => stops.find(s => s.id === id))
         .filter((s): s is StopSummary => !!s), [route.stops, stops]);
 
+    const warnings = useMemo(() => routeStops.some(s => s.status === "NotFound"), [routeStops]);
     const totalTrees = useMemo(() => routeStops.reduce((sum, s) => sum + (s.amount || 0), 0), [routeStops]);
     const completedTrees = useMemo(() => routeStops.filter(s => s.status === 'Completed').reduce((sum, s) => sum + (s.amount || 0), 0), [routeStops]);
 
     return (
-        <DroppableContainer id={`route/${route.id}`}>
+        <DroppableContainer id={`route/${route.id}`} className={!completed && (totalTrees === completedTrees) ? "outline-2 outline-offset-2 outline-green-600" : warnings ? "outline-2 outline-offset-2 outline-red-500" : ""}>
             <div className="flex items-center justify-between">
                 <DraggableRouteLabel route={route} completed={completed} />
                 <ExpandCounter
@@ -51,6 +52,7 @@ const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, stops, teams, co
                     onToggle={() => setExpanded(v => !v)}
                     completed={completedTrees}
                     total={totalTrees}
+                    extra={route.extraTrees}
                 />
             </div>
             {!completed && <div className="text-xs text-left text-gray-600 mb-2">Drop-off: {route.dropOffPoint}</div>}

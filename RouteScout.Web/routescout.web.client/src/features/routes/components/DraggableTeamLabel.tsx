@@ -2,6 +2,7 @@ import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { TeamSummary } from '../../teams/types/TeamSummary';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
+import TeamLabel from './TeamLabel';
 
 interface DraggableTeamLabelProps {
     team: TeamSummary;
@@ -14,9 +15,9 @@ const DraggableTeamLabel: React.FC<DraggableTeamLabelProps> = ({ team }) => {
             ref={setNodeRef}
             {...attributes}
             {...listeners}
-            className="font-semibold flex mb-1 text-gray-600 cursor-grab select-none touch-none"
+            className="p-2 cursor-grab select-none touch-none"
         >
-            <UserGroupIcon className="size-6 mr-1" /> {team.name}
+            <TeamLabel team={team} />
         </div>
     );
 };

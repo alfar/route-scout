@@ -19,7 +19,7 @@ const DroppableContainer: React.FC<DroppableContainerProps> = ({
     return (
         <div
             ref={setNodeRef}
-            className={`border border-gray-600 rounded p-3 mb-4 ${className ?? ""} ${isOver ? "droppable-over" : ""}`}
+            className={`border border-gray-600 rounded p-3 ${className ?? ""} ${isOver ? "droppable-over" : ""}`}
         >
             {children}
         </div>

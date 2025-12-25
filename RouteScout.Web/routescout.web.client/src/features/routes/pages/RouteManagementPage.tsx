@@ -9,6 +9,10 @@ import DraggableCapacityIcon from '../components/DraggableCapacityIcon';
 import { TrashIcon, HomeIcon, ClipboardIcon, UserGroupIcon, TruckIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { getTrailerCapacity } from '../functions/TrailerFunctions';
 import { useEventSource } from '../../stream/context/EventSourceContext';
+import TeamLabel from '../components/TeamLabel';
+import StopLabel from '../components/StopLabel';
+import RouteLabel from '../components/RouteLabel';
+import Container from '../components/Container';
 
 export interface RouteSummary {
     id: string;
@@ -132,18 +136,62 @@ const RouteManagementPage: React.FC = () => {
             }
         }
 
+        const handleRouteCompleted = (e: Event) => {
+            const data = (e as MessageEvent).data;
+            try {
+                const json = JSON.parse(data);
+                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, completed: true } : r));
+            } catch {
+                console.log('[SSE] RouteUnassignedFromTeam', data);
+            }
+        }
+
         const handleRouteDeleted = (e: Event) => {
             const data = (e as MessageEvent).data;
             try {
                 const json = JSON.parse(data);
-                setStops(prev => prev.map(s => s.routeId === json.routeId ? { ...s, routeId: null } : s));
+                setStops(prev => prev.map(s => s.routeId === json.routeId ? { ...s, routeId: null, status: "Pending" } : s));
                 setRoutes(prev => prev.filter(r => r.id !== json.routeId));
             } catch {
-                console.log('[SSE] RouteCreated', data);
+                console.log('[SSE] RouteDeleted', data);
+            }
+        };
+
+        const handleRouteExtraTreesAdded = (e: Event) => {
+            const data = (e as MessageEvent).data;
+            try {
+                const json = JSON.parse(data);
+                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, extraTrees: (r.extraTrees ?? 0) + json.amount } : r));
+            } catch {
+                console.log('[SSE] RouteExtraTreesAdded', data);
+            }
+        };
+
+        const handleRouteExtraTreesRemoved = (e: Event) => {
+            const data = (e as MessageEvent).data;
+            try {
+                const json = JSON.parse(data);
+                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, extraTrees: (r.extraTrees ?? 0) - json.amount } : r));
+            } catch {
+                console.log('[SSE] RouteExtraTreesRemoved', data);
+            }
+        };
+
+        const handleRouteCutShort = (e: Event) => {
+            const data = (e as MessageEvent).data;
+            try {
+                const json = JSON.parse(data);
+                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, cutShort: true } : r));
+            } catch {
+                console.log('[SSE] RouteCutShort', data);
             }
         };
 
         es.addEventListener('RouteCreated', handleRouteCreated);
+        es.addEventListener('RouteExtraTreesAdded', handleRouteExtraTreesAdded);
+        es.addEventListener('RouteExtraTreesRemoved', handleRouteExtraTreesRemoved);
+        es.addEventListener('RouteCutShort', handleRouteCutShort);
+        es.addEventListener('RouteCompleted', handleRouteCompleted);
         es.addEventListener('RouteDeleted', handleRouteDeleted);
         es.addEventListener('RouteAssignedToTeam', handleRouteAssignedToTeam);
         es.addEventListener('RouteUnassignedFromTeam', handleRouteUnassignedFromTeam);
@@ -162,22 +210,47 @@ const RouteManagementPage: React.FC = () => {
             const data = (e as MessageEvent).data;
             try {
                 const json = JSON.parse(data);
-                setStops(prev => prev.map(s => s.id === json.stopId ? { ...s, routeId: null } : s));
+                setStops(prev => prev.map(s => s.id === json.stopId ? { ...s, routeId: null, status: "Pending" } : s));
                 setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, stops: r.stops.filter(s => s !== json.stopId) } : r));
             } catch {
-                console.log('[SSE] StopAddedToRoute', data);
+                console.log('[SSE] StopRemovedFromRoute', data);
+            }
+        }
+        const handleStopStatusChange = (status: "Pending" | "Completed" | "NotFound") => (e: Event) => {
+            const data = (e as MessageEvent).data;
+            try {
+                const json = JSON.parse(data);
+                setStops(prev => prev.map(s => s.id === json.stopId ? { ...s, status: status } : s));
+            } catch {
+                console.log('[SSE] Stop' + status, data);
             }
         }
 
+        const handleStopCompleted = handleStopStatusChange("Completed")
+        const handleStopReset = handleStopStatusChange("Pending")
+        const handleStopNotFound = handleStopStatusChange("NotFound")
+
+        es.addEventListener('StopCompleted', handleStopCompleted);
+        es.addEventListener('StopReset', handleStopReset);
+        es.addEventListener('StopNotFound', handleStopNotFound);
         es.addEventListener('StopAddedToRoute', handleStopAddedToRoute);
         es.addEventListener('StopRemovedFromRoute', handleStopRemovedFromRoute);
 
         return () => {
             es.removeEventListener('RouteCreated', handleRouteCreated);
+            es.removeEventListener('RouteCompleted', handleRouteCompleted);
+            es.removeEventListener('RouteExtraTreesAdded', handleRouteExtraTreesAdded);
+            es.removeEventListener('RouteExtraTreesRemoved', handleRouteExtraTreesRemoved);
+            es.removeEventListener('RouteCutShort', handleRouteCutShort);
             es.removeEventListener('RouteDeleted', handleRouteDeleted);
             es.removeEventListener('RouteAssignedToTeam', handleRouteAssignedToTeam);
             es.removeEventListener('RouteUnassignedFromTeam', handleRouteUnassignedFromTeam);
+
+            es.removeEventListener('StopCompleted', handleStopCompleted);
+            es.removeEventListener('StopReset', handleStopReset);
+            es.removeEventListener('StopNotFound', handleStopNotFound);
             es.removeEventListener('StopAddedToRoute', handleStopAddedToRoute);
+            es.removeEventListener('StopRemovedFromRoute', handleStopRemovedFromRoute);
         };
     }, [es]);
 
@@ -459,15 +532,18 @@ const RouteManagementPage: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="md:col-span-1">
+                                <h2 className="text-xl font-semibold mb-2">Trailers</h2>
+                                <Container>
+                                    <div className="flex flex-col gap-2 mb-2 justify-items-stretch">
+                                        {/* Draggable capacity icons */}
+                                        <DraggableCapacityIcon kind="small" />
+                                        <DraggableCapacityIcon kind="large" />
+                                        <DraggableCapacityIcon kind="boogie" />
+                                    </div>
+                                </Container>
                             <h2 className="text-xl font-semibold mb-2">Stops</h2>
-                            <div className="flex gap-2 mb-2 justify-items-stretch">
-                                {/* Draggable capacity icons */}
-                                <DraggableCapacityIcon kind="small" />
-                                <DraggableCapacityIcon kind="large" />
-                                <DraggableCapacityIcon kind="boogie" />
-                            </div>
                             <DroppableContainer id="unassign/stop">
-                                <div className="text-xs text-gray-500 mb-2">Drag a team or capacity icon here to create a fitting route</div>
+                                <div className="text-xs text-gray-500">Drag a team or capacity icon here to create a fitting route</div>
                                 <UnassignedStopList stops={unassignedStops} highlightCount={highlightUnassignedCount} />
                             </DroppableContainer>
                         </div>
@@ -502,7 +578,7 @@ const RouteManagementPage: React.FC = () => {
 
                         <div className="md:col-span-1">
                             <h2 className="text-xl font-semibold mb-2">Teams</h2>
-                            <div className="border border-gray-400 rounded p-3 mb-4">
+                            <div className="border border-gray-400 rounded p-3 flex flex-col gap-2">
                                 <div className="text-xs text-gray-500 mb-2">Drag a route onto a team to assign. Drag a route onto "Routes" to clear team.</div>
                                 {teams.map(t => (
                                     <DroppableTeam key={t.id} team={t} routes={routes.filter(r => r.teamId === t.id)} stops={stops} teams={teams} />
@@ -515,30 +591,24 @@ const RouteManagementPage: React.FC = () => {
             </div >
             <DragOverlay>
                 {draggedItem?.type === 'stop' && (
-                    <div className="flex items-center gap-3 p-4 border border-gray-200 rounded bg-white min-w-2xs">
-                        <HomeIcon className="size-7 text-gray-500" />
-                        <div className="text-left flex-grow">
-                            <div className="font-medium text-base">{draggedItem.stop.streetName} {draggedItem.stop.houseNumber}</div>
-                            <div className="text-xs text-gray-500">Trees: {draggedItem.stop.amount}</div>
-                        </div>
+                    <div className="p-4 border border-gray-200 rounded bg-white min-w-2xs">
+                        <StopLabel stop={draggedItem.stop} />
                     </div>
                 )}
                 {draggedItem?.type === 'route' && (
-                    <div className="flex items-center gap-3 p-4 border border-gray-200 rounded bg-white min-w-2xs">
-                        <ClipboardIcon className="size-6 mr-1" />
-                        <span className="font-semibold text-gray-600">{draggedItem.route.name}</span>
+                    <div className="p-4 border border-gray-200 rounded bg-white min-w-2xs">
+                        <RouteLabel route={draggedItem.route} />
                     </div>
                 )}
                 {draggedItem?.type === 'team' && (
-                    <div className="flex items-center gap-3 p-4 border border-gray-200 rounded bg-white">
-                        <UserGroupIcon className="size-6 mr-1" />
-                        <span className="font-semibold text-gray-600">{draggedItem.team.name}</span>
+                    <div className="p-4 border border-gray-200 rounded bg-white min-w-2xs">
+                        <TeamLabel team={draggedItem.team} />
                     </div>
                 )}
                 {draggedItem?.type === 'capacity' && (
-                    <div className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border bg-white">
-                        <TruckIcon className="w-5 h-5" />
-                        <span className="text-sm capitalize">{draggedItem.kind.charAt(0).toUpperCase() + draggedItem.kind.slice(1)}</span>
+                    <div className="inline-flex items-center px-3 py-2 rounded border border-gray-600 text-gray-600 bg-white">
+                        <TruckIcon className="size-5 mr-1" />
+                        <span className="text-sm capitalize">{draggedItem.kind}</span>
                     </div>
                 )}
             </DragOverlay>

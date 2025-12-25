@@ -5,6 +5,8 @@ import RouteList from './RouteList';
 import DroppableContainer from './DroppableContainer';
 import DraggableTeamLabel from './DraggableTeamLabel';
 import ExpandCounter from './ExpandCounter';
+import { QrCodeIcon } from '@heroicons/react/24/outline';
+import QRCode from 'react-qr-code';
 
 interface DroppableTeamProps {
     team: TeamSummary;
@@ -17,9 +19,12 @@ export const DroppableTeam: React.FC<DroppableTeamProps> = ({ team, routes, stop
     const completedCount = routes.filter(r => r.completed).length;
     const totalCount = routes.length;
     const [showCompleted, setShowCompleted] = useState(false);
+    const [showQr, setShowQr] = useState(false);
 
     const activeRoutes = routes.filter(r => !r.completed);
     const completedRoutes = routes.filter(r => r.completed);
+  
+    const teamUrl = `${window.location.origin}/teams/${team.id}`;
 
     return (
         <DroppableContainer id={`team/${team.id}`}>
@@ -43,6 +48,18 @@ export const DroppableTeam: React.FC<DroppableTeamProps> = ({ team, routes, stop
                 {(showCompleted && completedRoutes.length > 0) && (
                     <RouteList routes={completedRoutes} stops={stops} teams={teams} completed={true}></RouteList>
                 )}
+            </div>
+
+            <div className="flex justify-end items-start gap-2">
+                {showQr && (
+                    <div className="bg-white border border-gray-600 p-2 rounded flex flex-col">
+                        <QRCode value={teamUrl} />
+                        <a href={teamUrl} target="_blank" rel="noopener" className="text-blue-600 text-xs underline mt-2">Open Link</a>
+                    </div>
+                )}
+                <button onClick={() => setShowQr(s => !s)}>
+                    <QrCodeIcon className="size-6" />
+                </button>
             </div>
         </DroppableContainer>
     );

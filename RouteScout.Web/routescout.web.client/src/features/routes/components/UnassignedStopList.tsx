@@ -22,12 +22,12 @@ const UnassignedStopList: React.FC<Props> = ({ stops, highlightCount = 0 }) => {
     };
 
     return (
-        <ul>
+        <ul className="gap-2">
             {stops.length === 0 && <li className="text-gray-500">No unassigned stops</li>}
             {stops.map((stop) => {
                 const highlight = highlightCount > 0 && shouldHighlight(stop);
                 return (
-                    <li key={stop.id} className={`mb-2 ${highlight ? 'ring-2 ring-indigo-400 rounded' : ''}`}>
+                    <li key={stop.id} className={`mb-2 ${highlight ? 'outline-2 outline-indigo-600 rounded' : ''}`}>
                         <DraggableStop stop={stop} />
                     </li>
                 );

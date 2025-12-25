@@ -20,9 +20,9 @@ const DraggableCapacityIcon: React.FC<DraggableCapacityIconProps> = ({ kind, lab
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border bg-white cursor-grab select-none touch-none"
+      className="inline-flex items-center px-3 py-2 rounded border border-gray-600 text-gray-600 cursor-grab select-none touch-none"
     >
-      <TruckIcon className="w-5 h-5" />
+      <TruckIcon className="size-5 mr-1" />
       <span className="text-sm capitalize">{text}</span>
     </div>
   );

@@ -12,7 +12,7 @@ interface Props {
 
 const RouteList: React.FC<Props> = ({ routes, stops, teams, completed }) => {
     return (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
             {routes.map(route => (
                 <DroppableRoute
                     key={route.id}

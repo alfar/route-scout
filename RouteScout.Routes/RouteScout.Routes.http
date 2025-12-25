@@ -1,6 +1,0 @@
-@RouteScout.Routes_HostAddress = http://localhost:5081
-
-GET {{RouteScout.Routes_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

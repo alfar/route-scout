@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { TeamSummary } from './features/teams/types/TeamSummary';
 import { TeamInfoPage } from './features/teams/components/TeamInfoPage';
@@ -37,27 +37,36 @@ export function TeamApp() {
     const isInfo = location.pathname.endsWith('/info');
 
     return (
-        <div className="p-6 flex flex-col gap-4 max-w-4xl mx-auto">
-            <div className="flex gap-4 border-b pb-2">
-                <Link
-                    to={`/teams/${teamId}`} // relative root -> routes page
-                    className={`px-4 py-2 rounded-t ${!isInfo ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                >Routes & Stops</Link>
-                <Link
-                    to={`/teams/${teamId}/info`}
-                    className={`px-4 py-2 rounded-t ${isInfo ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                >Team Info</Link>
-            </div>
+        <div className="min-h-screen flex flex-col p-3">
+            {/* Header */}
+            <header className="sticky top-0 bg-white z-10">
+                {/* Tabs (mobile-first bottom-looking but placed under header) */}
+                <nav>
+                    <div className="flex gap-2">
+                        <Link
+                            to={`/teams/${teamId}`}
+                            className={`flex-1 text-center px-3 py-2 rounded-md ${!isInfo ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                        >Routes</Link>
+                        <Link
+                            to={`/teams/${teamId}/info`}
+                            className={`flex-1 text-center px-3 py-2 rounded-md ${isInfo ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                        >Info</Link>
+                    </div>
+                </nav>
+            </header>
 
-            {loading && <div>Loading...</div>}
-            {error && <div className="text-red-600">{error}</div>}
+            {/* Content */}
+            <main className="flex-1 max-w-4xl w-full mx-auto py-2">
+                {loading && <div>Loading...</div>}
+                {error && <div className="text-red-600">{error}</div>}
 
-            {!loading && !error && team && (
-                <Routes>
-                    <Route path="" element={<TeamRoutesPage teamId={teamId} />} />
-                    <Route path="info" element={<TeamInfoPage team={team} onUpdated={loadTeam} teamId={teamId} />} />
-                </Routes>
-            )}
+                {!loading && !error && team && (
+                    <Routes>
+                        <Route path="" element={<TeamRoutesPage teamId={teamId} />} />
+                        <Route path="info" element={<TeamInfoPage team={team} onUpdated={loadTeam} teamId={teamId} />} />
+                    </Routes>
+                )}
+            </main>
         </div>
     );
 }

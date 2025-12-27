@@ -9,6 +9,8 @@ interface Props {
     onUpdated: () => Promise<void>;
 }
 
+export const trailerSizes = ["Small", "Large", "Boogie"];
+
 export function TeamInfoPage({ team, teamId, onUpdated }: Props) {
     const [name, setName] = useState(team.name);
     const [leaderName, setLeaderName] = useState(team.leaderName);
@@ -17,7 +19,6 @@ export function TeamInfoPage({ team, teamId, onUpdated }: Props) {
     const [saving, setSaving] = useState(false);
     const [memberToAdd, setMemberToAdd] = useState('');
     const [members, setMembers] = useState<string[]>(team.members);
-    const trailerSizes = ["Small", "Large", "Boogie"];
     const qrUrl = `${window.location.origin}/team/${teamId}`;
     const { t } = useTranslation(['teams', 'common']);
 

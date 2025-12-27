@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { TeamCard } from '../components/TeamCard';
 import { CreateTeamForm } from '../components/CreateTeamForm';
 import { useTranslation } from 'react-i18next';
+import { TeamSummary } from '../types/TeamSummary';
+import { trailerSizes } from '../components/TeamInfoPage';
 
 export default function TeamsPage() {
   const [showCreate, setShowCreate] = useState(false);

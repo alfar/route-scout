@@ -12,7 +12,6 @@ function App() {
         <Router>
             <Routes>
                 <Route path="/teams/:id/*" element={<TeamApp />} />
-                <Route path="/teams" element={<TeamsPage />} />
                 <Route path="*" element={<DispatchApp />} />
             </Routes>
         </Router>

@@ -4,5 +4,9 @@
   "leaderName": "Leader Name",
   "leaderPhone": "Leader Phone",
   "members": "Members",
-  "noMembers": "No members yet."
+  "memberName": "Name",
+  "noMembers": "No members yet.",
+  "trailerSizeSmall": "Small",
+  "trailerSizeLarge": "Large",
+  "trailerSizeBoogie": "Boogie"
 }

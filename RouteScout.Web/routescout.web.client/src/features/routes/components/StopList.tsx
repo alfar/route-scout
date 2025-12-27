@@ -1,6 +1,7 @@
 import React from 'react';
 import { StopSummary } from '../pages/RouteManagementPage';
 import DraggableStop from './DraggableStop';
+import { useTranslation } from 'react-i18next';
 
 export interface StopListProps {
     stops: StopSummary[];
@@ -8,6 +9,7 @@ export interface StopListProps {
 }
 
 const StopList: React.FC<StopListProps> = ({ stops, highlightCount }) => {
+    const { t } = useTranslation(['routes']);
     // Compute highlight similar to UnassignedStopList but only for non-completed stops
     let cumulative = 0;
     const shouldHighlight = (stop: StopSummary) => {
@@ -19,7 +21,7 @@ const StopList: React.FC<StopListProps> = ({ stops, highlightCount }) => {
     };
 
     if (stops.length === 0) {
-        return <div className="text-gray-400">No stops assigned</div>;
+        return <div className="text-gray-400">{t('noStops')}</div>;
     }
 
     return (

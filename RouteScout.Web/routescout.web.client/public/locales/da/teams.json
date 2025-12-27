@@ -1,11 +1,11 @@
 {
-  "name": "Navn",
+  "name": "Patruljenavn",
   "trailerSize": "Trailerstørrelse",
   "leaderName": "Patruljeleder",
   "leaderPhone": "Kontakttelefon",
-  "members": "Medlemmer",
+  "members": "Patruljemedlemmer",
   "memberName": "Navn",
-  "noMembers": "Ingen medlemmer registreret.",
+  "noMembers": "Ingen medlemmer",
   "trailerSizeSmall": "Lille havetrailer",
   "trailerSizeLarge": "Stor havetrailer",
   "trailerSizeBoogie": "Boogietrailer"

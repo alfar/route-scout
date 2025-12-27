@@ -7,6 +7,7 @@ import { useDndContext } from '@dnd-kit/core';
 import { TeamSummary } from '../../teams/types/TeamSummary';
 import { getTrailerCapacity } from '../functions/TrailerFunctions';
 import ExpandCounter from './ExpandCounter';
+import { useTranslation } from 'react-i18next';
 
 interface DroppableRouteProps {
     route: RouteSummary;
@@ -18,6 +19,7 @@ interface DroppableRouteProps {
 const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, stops, teams, completed = false }) => {
     const [expanded, setExpanded] = useState(!completed);
     const { active, over } = useDndContext();
+    const { t } = useTranslation(['routes']);
 
     const highlightCount = completed ? 0 : useMemo(() => {
         if (active && over) {
@@ -55,7 +57,7 @@ const DroppableRoute: React.FC<DroppableRouteProps> = ({ route, stops, teams, co
                     extra={route.extraTrees}
                 />
             </div>
-            {!completed && <div className="text-xs text-left text-gray-600 mb-2">Drop-off: {route.dropOffPoint}</div>}
+            {!completed && <div className="text-xs text-left text-gray-600 mb-2">{t('dropOff', { point: route.dropOffPoint })}</div>}
             {expanded && (
                 <StopList stops={routeStops} highlightCount={highlightCount} />
             )}

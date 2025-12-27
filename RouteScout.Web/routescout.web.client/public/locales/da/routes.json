@@ -9,5 +9,17 @@
   "dropOff": "Aflæsning: {{point}}",
   "noStops": "Ingen stop.",
   "minus": "-",
-  "plus": "+"
+  "plus": "+",
+  "dispatchTitle": "Dispatch",
+  "expandDetails": "Udvid detaljer",
+  "collapseDetails": "Skjul detaljer",
+  "treesLabel_one": "{{count}} træ",
+  "treesLabel_other": "{{count}} træer",
+  "trailersSectionTitle": "Trailere",
+  "stopsSectionTitle": "Stop",
+  "routesSectionTitle": "Ruter",
+  "teamsSectionTitle": "Patruljer",
+  "dragHereCreateRoute": "Træk en patrulje eller en trailer hertil for at oprette en passende rute",
+  "dropRouteClearTeam": "Træk en rute hertil for at fjerne den fra en patrulje",
+  "dragAssignHints": "Træk en rute ind på et hold for at tildele den"
 }

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { AddressCandidate } from '../types/AddressCandidate';
 import { AddressCandidatesTable } from '../components/AddressCandidatesTable';
+import { useTranslation } from 'react-i18next';
 
 function AddressWashingPage() {
     const [candidates, setCandidates] = useState<AddressCandidate[]>();
+    const { t } = useTranslation(['common']);
 
     useEffect(() => {
         populateCandidates();
@@ -23,8 +25,6 @@ function AddressWashingPage() {
         await fetch(`/api/address-candidates/${candidateId}/select/${addressId}`, {
             method: 'POST'
         });
-        // Refresh the candidates list after selection
-        // (Assuming you have a fetchCandidates function)
         await populateCandidates();
     };
 
@@ -35,8 +35,8 @@ function AddressWashingPage() {
     }
 
     return (
-        <div className="flex flex-col gap-8">
-            <h1 className="text-2xl font-bold text-blue-700">Address Candidates</h1>
+        <div className="flex flex-col p-3 lg:p-4 overscroll-contain gap-2">
+            <h1 className="text-2xl font-bold mb-3">{t('addressCandidatesTitle')}</h1>
             <AddressCandidatesTable candidates={candidates} onReject={handleReject} onConfirm={handleConfirm} onSelectAddress={handleSelectAddress} />
         </div>
     );

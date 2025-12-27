@@ -8,18 +8,20 @@ import RouteManagementPage from './features/routes/pages/RouteManagementPage';
 import TeamsPage from './features/teams/pages/TeamsPage';
 import StreetCatalogImportPage from './features/street-catalog/pages/StreetCatalogImportPage';
 import SseProvider from './features/stream/components/SseProvider';
+import { useTranslation } from 'react-i18next';
 
 export function DispatchApp() {
+  const { t } = useTranslation(['common']);
   return (
     <div className="App">
       <nav className="bg-blue-600 p-4 flex gap-4 flex-wrap">
-        <Link className="text-white font-semibold hover:underline" to="/">Home</Link>
-        <Link className="text-white font-semibold hover:underline" to="/payments">Payments</Link>
-        <Link className="text-white font-semibold hover:underline" to="/address-washing">Address Washing</Link>
-        <Link className="text-white font-semibold hover:underline" to="/routes">Route Management</Link>
-        <Link className="text-white font-semibold hover:underline" to="/teams">Teams</Link>
-        <Link className="text-white font-semibold hover:underline" to="/street-catalog/import">Street Catalog Import</Link>
-        <Link className="text-white font-semibold hover:underline" to="/about">About</Link>
+        <Link className="text-white font-semibold hover:underline" to="/">{t('home')}</Link>
+        <Link className="text-white font-semibold hover:underline" to="/payments">{t('payments')}</Link>
+        <Link className="text-white font-semibold hover:underline" to="/address-washing">{t('addressWashing')}</Link>
+        <Link className="text-white font-semibold hover:underline" to="/routes">{t('routeManagement')}</Link>
+        <Link className="text-white font-semibold hover:underline" to="/teams">{t('teams')}</Link>
+        <Link className="text-white font-semibold hover:underline" to="/street-catalog/import">{t('streetCatalogImport')}</Link>
+        <Link className="text-white font-semibold hover:underline" to="/about">{t('about')}</Link>
       </nav>
       <SseProvider>
         <main className="p-8 flex flex-col gap-6">

@@ -9,5 +9,8 @@
   "dropOff": "Drop Off: {{point}}",
   "noStops": "No stops.",
   "minus": "-",
-  "plus": "+"
+  "plus": "+",
+  "expandDetails": "Expand details",
+  "collapseDetails": "Collapse details",
+  "treesLabel": "Trees"
 }

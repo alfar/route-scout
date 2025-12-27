@@ -1,8 +1,11 @@
+import { useTranslation } from 'react-i18next';
+
 function DashboardPage() {
+    const { t } = useTranslation(['common']);
     return (
         <div>
-            <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
-            <p>Welcome to the RouteScout Dashboard! Here you can find an overview of your routes and activities.</p>
+            <h1 className="text-3xl font-bold mb-4">{t('dashboardTitle')}</h1>
+            <p>{t('dashboardWelcome')}</p>
         </div>
     );
 }

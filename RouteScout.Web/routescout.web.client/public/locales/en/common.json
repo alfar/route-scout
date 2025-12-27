@@ -10,7 +10,17 @@
   "add": "Add",
   "openRoutesPage": "Open Routes Page",
   "shareQr": "Scan to open team routes",
-  "trailerSizeSmall": "Small",
-  "trailerSizeLarge": "Large",
-  "trailerSizeBoogie": "Boogie"
+  "home": "Home",
+  "payments": "Payments",
+  "addressWashing": "Address Washing",
+  "routeManagement": "Route Management",
+  "teams": "Teams",
+  "streetCatalogImport": "Street Catalog Import",
+  "streetCatalogImportDesc": "Import or update your street catalog.",
+  "about": "About",
+  "close": "Close",
+  "aboutMadeBy": "RouteScout was made by Arne Sostack in 2025",
+  "dashboardTitle": "Dashboard",
+  "dashboardWelcome": "Welcome to the RouteScout Dashboard! Here you can find an overview of your routes and activities.",
+  "addressCandidatesTitle": "Address Candidates"
 }

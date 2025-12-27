@@ -13,6 +13,8 @@ import TeamLabel from '../components/TeamLabel';
 import StopLabel from '../components/StopLabel';
 import RouteLabel from '../components/RouteLabel';
 import Container from '../components/Container';
+import { useTranslation } from 'react-i18next';
+import CapacityIcon from '../components/CapacityIcon';
 
 export interface RouteStopDetail {
     stopId: string;
@@ -73,6 +75,8 @@ const RouteManagementPage: React.FC = () => {
     const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null);
     const [hoveredItem, setHoveredItem] = useState<HoveredItem | null>(null);
 
+    const { t } = useTranslation(['routes', 'common']);
+
     const es = useEventSource();
 
     // Prefer PointerSensor first, TouchSensor as fallback
@@ -101,7 +105,7 @@ const RouteManagementPage: React.FC = () => {
             setTeams(teamsData);
             setError(null);
         } catch (e) {
-            setError('Failed to load data');
+            setError(t('error'));
         } finally {
             setLoading(false);
         }
@@ -118,7 +122,7 @@ const RouteManagementPage: React.FC = () => {
             const data = (e as MessageEvent).data;
             try {
                 const json = JSON.parse(data);
-                setRoutes(prev => [...prev, { id: json.routeId, name: json.name, deleted: false, stops: [], dropOffPoint: json.dropOffPoint, cutShort: false, extraTrees: 0, teamId: null, completed: false }]);
+                setRoutes(prev => [...prev, { id: json.routeId, name: json.name, deleted: false, stops: [], stopDetails: [], dropOffPoint: json.dropOffPoint, cutShort: false, extraTrees: 0, teamId: null, completed: false }]);
             } catch {
                 console.log('[SSE] RouteCreated', data);
             }
@@ -532,15 +536,15 @@ const RouteManagementPage: React.FC = () => {
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
             <div className="p-3 lg:p-4 overscroll-contain">
-                <h1 className="text-2xl font-bold mb-1">Dispatch</h1>
-                <div className="text-sm text-gray-700 mb-3">{completedTrees} / {totalTrees} trees</div>
+                <h1 className="text-2xl font-bold mb-1">{t('dispatchTitle')}</h1>
+                <div className="text-sm text-gray-700 mb-3">{completedTrees} / {t('treesLabel', { count: totalTrees })}</div>
                 {error && <div className="text-red-600 mb-2">{error}</div>}
                 {loading ? (
-                    <div>Loading...</div>
+                    <div>{t('loading')}</div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="md:col-span-1">
-                                <h2 className="text-xl font-semibold mb-2">Trailers</h2>
+                                <h2 className="text-xl font-semibold mb-2">{t('trailersSectionTitle')}</h2>
                                 <Container>
                                     <div className="flex flex-col gap-2 mb-2 justify-items-stretch">
                                         {/* Draggable capacity icons */}
@@ -549,17 +553,17 @@ const RouteManagementPage: React.FC = () => {
                                         <DraggableCapacityIcon kind="boogie" />
                                     </div>
                                 </Container>
-                            <h2 className="text-xl font-semibold mb-2">Stops</h2>
+                            <h2 className="text-xl font-semibold mb-2">{t('stopsSectionTitle')}</h2>
                             <DroppableContainer id="unassign/stop">
-                                <div className="text-xs text-gray-500">Drag a team or capacity icon here to create a fitting route</div>
+                                <div className="text-xs text-gray-500">{t('dragHereCreateRoute')}</div>
                                 <UnassignedStopList stops={unassignedStops} highlightCount={highlightUnassignedCount} />
                             </DroppableContainer>
                         </div>
 
                         <div className="md:col-span-1">
-                            <h2 className="text-xl font-semibold mb-2">Routes</h2>
+                            <h2 className="text-xl font-semibold mb-2">{t('routesSectionTitle')}</h2>
                             <DroppableContainer id="unassign/route">
-                                <div className="text-xs text-gray-500 mb-2">Drop route here to clear team</div>
+                                <div className="text-xs text-gray-500 mb-2">{t('dropRouteClearTeam')}</div>
                                 <RouteList routes={routes.filter(r => !r.teamId).map(r => ({ ...r, id: r.id }))} stops={stops} teams={teams} />
                             </DroppableContainer>
                             <div
@@ -585,9 +589,9 @@ const RouteManagementPage: React.FC = () => {
                         </div>
 
                         <div className="md:col-span-1">
-                            <h2 className="text-xl font-semibold mb-2">Teams</h2>
+                            <h2 className="text-xl font-semibold mb-2">{t('teamsSectionTitle')}</h2>
                             <div className="border border-gray-400 rounded p-3 flex flex-col gap-2">
-                                <div className="text-xs text-gray-500 mb-2">Drag a route onto a team to assign. Drag a route onto "Routes" to clear team.</div>
+                                <div className="text-xs text-gray-500 mb-2">{t('dragAssignHints')}</div>
                                 {teams.map(t => (
                                     <DroppableTeam key={t.id} team={t} routes={routes.filter(r => r.teamId === t.id)} stops={stops} teams={teams} />
                                 ))}
@@ -614,9 +618,8 @@ const RouteManagementPage: React.FC = () => {
                     </div>
                 )}
                 {draggedItem?.type === 'capacity' && (
-                    <div className="inline-flex items-center px-3 py-2 rounded border border-gray-600 text-gray-600 bg-white">
-                        <TruckIcon className="size-5 mr-1" />
-                        <span className="text-sm capitalize">{draggedItem.kind}</span>
+                    <div className="px-3 py-2 rounded border border-gray-600 text-gray-600 bg-white">
+                        <CapacityIcon kind={draggedItem.kind} />
                     </div>
                 )}
             </DragOverlay>

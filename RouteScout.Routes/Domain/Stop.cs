@@ -17,6 +17,8 @@ public class Stop
     public int SortOrder { get; set; }
     public Guid AreaId { get; set; }
     public string AreaName { get; set; } = string.Empty;
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 
     // Apply methods for event sourcing
     public void Apply(StopCreated e)
@@ -33,6 +35,8 @@ public class Stop
         SortOrder = e.SortOrder;
         AreaId = e.AreaId;
         AreaName = e.AreaName;
+        Latitude = e.Latitude;
+        Longitude = e.Longitude;
     }
 
     public void Apply(StopAssignedToRoute e)

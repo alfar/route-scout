@@ -1,14 +1,16 @@
 ﻿<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.1695036">
-
-	<PropertyGroup>
-		<StartupCommand>npm run dev</StartupCommand>
-		<JavaScriptTestRoot>src\</JavaScriptTestRoot>
-		<JavaScriptTestFramework>Jest</JavaScriptTestFramework>
-		<!-- Allows the build (or compile) script located on package.json to run on Build -->
-		<ShouldRunBuildScript>false</ShouldRunBuildScript>
-		<!-- Folder where production build objects will be placed -->
-		<BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
-		<TargetFramework>net10.0</TargetFramework>
-		<StartupCommand>npm run dev</StartupCommand>
-	</PropertyGroup>
+  <PropertyGroup>
+    <StartupCommand>npm run dev</StartupCommand>
+    <JavaScriptTestRoot>src\</JavaScriptTestRoot>
+    <JavaScriptTestFramework>Jest</JavaScriptTestFramework>
+    <!-- Allows the build (or compile) script located on package.json to run on Build -->
+    <ShouldRunBuildScript>false</ShouldRunBuildScript>
+    <!-- Folder where production build objects will be placed -->
+    <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
+    <TargetFramework>net10.0</TargetFramework>
+    <StartupCommand>npm run dev</StartupCommand>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="public\locales\NewFolder\" />
+  </ItemGroup>
 </Project>

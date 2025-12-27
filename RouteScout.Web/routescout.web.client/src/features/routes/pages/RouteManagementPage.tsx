@@ -14,11 +14,19 @@ import StopLabel from '../components/StopLabel';
 import RouteLabel from '../components/RouteLabel';
 import Container from '../components/Container';
 
+export interface RouteStopDetail {
+    stopId: string;
+    streetName: string;
+    houseNumber: string;
+    amount: number;
+}
+
 export interface RouteSummary {
     id: string;
     name: string;
     dropOffPoint: string;
     stops: string[];
+    stopDetails: RouteStopDetail[];
     deleted: boolean;
     teamId?: string | null;
     extraTrees?: number;

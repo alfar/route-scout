@@ -1,0 +1,13 @@
+{
+  "extraTrees_one": "Extra: {{count}} tree",
+  "extraTrees_other": "Extra: {{count}} trees",
+  "extra": "Extra: {{count}}",
+  "cutShort": "Cut Short",
+  "completed": "Completed",
+  "notFound": "Not Found",
+  "reset": "Reset",
+  "dropOff": "Drop Off: {{point}}",
+  "noStops": "No stops.",
+  "minus": "-",
+  "plus": "+"
+}

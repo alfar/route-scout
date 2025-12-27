@@ -1,0 +1,16 @@
+{
+  "loading": "Loading...",
+  "error": "Error",
+  "noRoutes": "No routes assigned.",
+  "routesTab": "Routes",
+  "infoTab": "Info",
+  "save": "Save Changes",
+  "saving": "Saving...",
+  "remove": "Remove",
+  "add": "Add",
+  "openRoutesPage": "Open Routes Page",
+  "shareQr": "Scan to open team routes",
+  "trailerSizeSmall": "Small",
+  "trailerSizeLarge": "Large",
+  "trailerSizeBoogie": "Boogie"
+}

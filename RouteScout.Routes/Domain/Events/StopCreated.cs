@@ -10,5 +10,6 @@ public record StopCreated(
     int Amount,
     int SortOrder,
     Guid AreaId,
-    string AreaName
-);
+    string AreaName,
+    double? Latitude,
+    double? Longitude);

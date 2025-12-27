@@ -1,0 +1,13 @@
+{
+  "loading": "Henter...",
+  "error": "Fejl",
+  "noRoutes": "Ingen ruter tildelt.",
+  "routesTab": "Ruter",
+  "infoTab": "Info",
+  "save": "Gem",
+  "saving": "Gemmer...",
+  "remove": "Fjern",
+  "add": "Tilføj",
+  "openRoutesPage": "Åben patrulje",
+  "shareQr": "Scan for at dele patruljen"
+}

@@ -1,0 +1,13 @@
+{
+  "extraTrees_one": "Ekstra: {{count}} træ",
+  "extraTrees_other": "Ekstra: {{count}} træer",
+  "extra": "Ekstra: {{count}}",
+  "cutShort": "Overfyldt",
+  "completed": "Opsamlet",
+  "notFound": "Ikke fundet",
+  "reset": "Nulstil",
+  "dropOff": "Aflæsning: {{point}}",
+  "noStops": "Ingen stop.",
+  "minus": "-",
+  "plus": "+"
+}

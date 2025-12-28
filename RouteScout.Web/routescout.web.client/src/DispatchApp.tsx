@@ -19,7 +19,6 @@ export function DispatchApp() {
         <Link className="text-white font-semibold hover:underline" to="/payments">{t('payments')}</Link>
         <Link className="text-white font-semibold hover:underline" to="/address-washing">{t('addressWashing')}</Link>
         <Link className="text-white font-semibold hover:underline" to="/routes">{t('routeManagement')}</Link>
-        <Link className="text-white font-semibold hover:underline" to="/teams">{t('teams')}</Link>
         <Link className="text-white font-semibold hover:underline" to="/street-catalog/import">{t('streetCatalogImport')}</Link>
         <Link className="text-white font-semibold hover:underline" to="/about">{t('about')}</Link>
       </nav>
@@ -30,7 +29,6 @@ export function DispatchApp() {
             <Route path="/payments" element={<PaymentsPage />} />
             <Route path="/address-washing" element={<AddressWashingPage />} />
             <Route path="/routes" element={<RouteManagementPage />} />
-            <Route path="/teams" element={<TeamsPage />} />
             <Route path="/street-catalog/import" element={<StreetCatalogImportPage />} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>

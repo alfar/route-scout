@@ -105,7 +105,7 @@ export function TeamRoutesPage({ teamId }: Props) {
 
                         <div className="mt-3 flex flex-col gap-2">
                             {routeStops.map(s => (
-                                <div key={s.id} className="rounded border border-gray-200 p-2">
+                                <div key={s.id} className="rounded border border-gray-600 p-2">
                                     <div className="flex items-center gap-2">
                                         {statusBadge(s.status)}
                                         <span className="flex-1 text-left w-full">{s.streetName} {s.houseNumber}</span>

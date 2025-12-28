@@ -11,6 +11,10 @@
     <StartupCommand>npm run dev</StartupCommand>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="public\locales\NewFolder\" />
+    <None Remove="public\locales\NewFolder\**" />
+    <TypeScriptConfiguration Remove="public\locales\NewFolder\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\features\teams\pages\" />
   </ItemGroup>
 </Project>

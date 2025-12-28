@@ -15,7 +15,7 @@ export const DraggableStop: React.FC<DraggableStopProps> = ({ stop }) => {
             ref={setNodeRef}
             {...listeners}
             {...attributes}
-            className="cursor-grab p-4 border border-gray-200 rounded touch-none select-none"
+            className="cursor-grab p-4 border border-gray-600 rounded touch-none select-none"
         >
             <StopLabel stop={stop} showStatus={true} />
         </div>

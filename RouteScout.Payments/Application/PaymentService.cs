@@ -18,8 +18,8 @@ public class PaymentService
 
     public class BankRows
     {
-        public DateTimeOffset Date { get; set; }
-        public string Text { get; set; } = "";
+        public DateTimeOffset Timestamp { get; set; }
+        public string Message { get; set; } = "";
         public decimal Amount { get; set; }
     }
 
@@ -29,19 +29,55 @@ public class PaymentService
         using var csv = new CsvHelper.CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture)
         {
             HasHeaderRecord = true,
-            Delimiter = ";" 
+            Delimiter = ","
         });
 
-        var records = csv.GetRecords<BankRows>().ToList();
+        // Read the first header row (English)
+        csv.Read();
+        csv.ReadHeader();
 
-        foreach (var record in records)
+        // Read and ignore the second header row (Danish)
+        if (csv.Read())
         {
-            // Extract relevant fields from CSV columns (you’ll adjust this for your bank’s format)
-            string text = record.Text ?? "";
-            decimal amount = record.Amount;
-            DateTimeOffset timestamp = record.Date;
+            // Intentionally ignore this row
+        }
 
-            var hash = ComputeHash(text, amount, timestamp);
+        // Process remaining records
+        while (csv.Read())
+        {
+            // Extract relevant fields from CSV columns
+            var message = csv.GetField("Message") ?? string.Empty;
+
+            // Amount parsing
+            decimal amount;
+            if (!csv.TryGetField("Amount", out amount))
+            {
+                var rawAmount = csv.GetField("Amount") ?? "0";
+                rawAmount = new string(rawAmount.Where(c => char.IsDigit(c) || c == '.' || c == ',' || c == '-').ToArray());
+                // Try with invariant, then with current culture
+                if (!decimal.TryParse(rawAmount, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out amount))
+                {
+                    if (!decimal.TryParse(rawAmount, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.CurrentCulture, out amount))
+                    {
+                        // Skip if cannot parse amount
+                        continue;
+                    }
+                }
+            }
+
+            // Timestamp parsing
+            DateTimeOffset timestamp;
+            var tsRaw = csv.GetField("Timestamp") ?? string.Empty;
+            if (!DateTimeOffset.TryParse(tsRaw, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out timestamp))
+            {
+                if (!DateTimeOffset.TryParse(tsRaw, System.Globalization.CultureInfo.CurrentCulture, System.Globalization.DateTimeStyles.AssumeLocal, out timestamp))
+                {
+                    // Skip if cannot parse timestamp
+                    continue;
+                }
+            }
+
+            var hash = ComputeHash(message, amount, timestamp);
 
             // Check if this hash already exists (duplicate)
             var duplicate = await _session.Query<PaymentSummary>()
@@ -57,7 +93,7 @@ public class PaymentService
             }
             else
             {
-                var events = Payment.ImportTransfer(text, amount, timestamp, hash);
+                var events = Payment.ImportTransfer(message, amount, timestamp, hash);
                 _session.Events.StartStream<Payment>(Guid.NewGuid(), events.ToArray());
             }
         }

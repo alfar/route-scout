@@ -9,7 +9,7 @@ export interface DraggableRouteProps {
 // Compact boxed draggable route header suitable for absolute positioning in DragOverlay
 const DraggableRoute: React.FC<DraggableRouteProps> = ({ route }) => {
     return (
-        <div className="flex items-center gap-3 cursor-grab p-4 border border-gray-200 rounded bg-white min-w-2xs">
+        <div className="flex items-center gap-3 cursor-grab p-4 border border-gray-600 rounded bg-white min-w-2xs">
             <DraggableRouteLabel route={route} />
         </div>
     );

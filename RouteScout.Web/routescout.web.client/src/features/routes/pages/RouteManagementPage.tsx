@@ -607,7 +607,7 @@ const RouteManagementPage: React.FC = () => {
                         <div className="md:col-span-1">
                             <h2 className="text-xl font-semibold mb-2">{t('teamsSectionTitle')}</h2>
                             <DroppableContainer id="team/new">
-                                <div className="border border-gray-400 rounded p-3 flex flex-col gap-2">
+                                <div className="border border-gray-600 rounded p-3 flex flex-col gap-2">
                                     <div className="text-xs text-gray-500 mb-2">{t('dragTeamHints')}</div>
                                     {teams.map(t => (
                                         <DroppableTeam key={t.id} team={t} routes={routes.filter(r => r.teamId === t.id)} stops={stops} teams={teams} />
@@ -621,17 +621,17 @@ const RouteManagementPage: React.FC = () => {
             </div >
             <DragOverlay>
                 {draggedItem?.type === 'stop' && (
-                    <div className="p-4 border border-gray-200 rounded bg-white min-w-2xs">
+                    <div className="p-4 border border-gray-600 rounded bg-white min-w-2xs">
                         <StopLabel stop={draggedItem.stop} />
                     </div>
                 )}
                 {draggedItem?.type === 'route' && (
-                    <div className="p-4 border border-gray-200 rounded bg-white min-w-2xs">
+                    <div className="p-4 border border-gray-600 rounded bg-white min-w-2xs">
                         <RouteLabel route={draggedItem.route} />
                     </div>
                 )}
                 {draggedItem?.type === 'team' && (
-                    <div className="p-4 border border-gray-200 rounded bg-white min-w-2xs">
+                    <div className="p-4 border border-gray-600 rounded bg-white min-w-2xs">
                         <TeamLabel team={draggedItem.team} />
                     </div>
                 )}

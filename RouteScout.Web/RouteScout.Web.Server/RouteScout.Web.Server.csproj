@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\RouteScout.AddressWashing\RouteScout.AddressWashing.csproj" />
-    <ProjectReference Include="..\..\RouteScout.Issues\RouteScout.Issues.csproj" />
     <ProjectReference Include="..\..\RouteScout.Payments\RouteScout.Payments.csproj" />
     <ProjectReference Include="..\..\RouteScout.Routes\RouteScout.Routes.csproj" />
     <ProjectReference Include="..\..\RouteScout.Stream\RouteScout.Stream.csproj" />
@@ -32,6 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Integration\Routes\" />
     <Folder Include="Services\" />
   </ItemGroup>
 

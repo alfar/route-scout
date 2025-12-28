@@ -3,20 +3,16 @@ using Marten;
 using Microsoft.AspNetCore.HttpOverrides;
 using RouteScout.AddressWashing.Extensions;
 using RouteScout.AddressWashing.IntegrationPoints;
-using RouteScout.Issues.Extensions;
 using RouteScout.Payments.Endpoints;
 using RouteScout.Payments.Extensions;
 using RouteScout.Payments.IntegrationPoints;
 using RouteScout.Routes.Extensions;
-using RouteScout.Routes.IntegrationPoints;
-using RouteScout.Routes.Integrations;
 using RouteScout.Stream.Extensions;
 using RouteScout.StreetCatalog.Extensions;
 using RouteScout.StreetCatalog.Services;
 using RouteScout.Teams.Extensions;
 using RouteScout.Web.Server.Integration.AddressWashing;
 using RouteScout.Web.Server.Integration.Payments;
-using RouteScout.Web.Server.Integration.Routes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,7 +43,6 @@ builder.Services.AddHttpsRedirection(options =>
 
 // Add services to the container.
 builder.Services.AddAddressWashing();
-builder.Services.AddIssues();
 builder.Services.AddPayments();
 builder.Services.AddRoutes();
 builder.Services.AddTeams();
@@ -56,8 +51,6 @@ builder.Services.AddStream();
 builder.Services.AddScoped<IAddressCandidateConfirmedHandler, AddressConfirmedAddStopHandler>();
 builder.Services.AddScoped<IAddressCandidateRejectedHandler, AddressRejectedPaymentResetHandler>();
 builder.Services.AddScoped<IPaymentConfirmedHandler, PaymentConfirmedAddAddressHandler>();
-builder.Services.AddScoped<IStopNotFoundEventHandler, StopNotFoundCreateIssueEventHandler>();
-builder.Services.AddScoped<IRouteCutShortEventHandler, RouteCutShortCreateIssueEventHandler>();
 
 builder.Services.AddScoped<IStreetCatalogClient, StreetCatalogClient>();
 
@@ -71,7 +64,6 @@ builder.Services.AddMarten(opts =>
 
     // Register event types and projections
     opts.AddAddressWashingEventTypesAndProjections();
-    opts.AddIssuesEventTypesAndProjections();
     opts.AddPaymentsEventTypesAndProjections();
     opts.AddRoutesEventTypesAndProjections();
     opts.AddTeamsEventTypesAndProjections();
@@ -96,7 +88,7 @@ app.UseStaticFiles();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
- {
+{
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -108,7 +100,6 @@ app.UseAuthorization();
 
 app.MapGroup("/api")
     .MapAddressWashingEndpoints()
-    .MapIssueEndpoints()
     .MapPaymentEndpoints()
     .MapRouteEndpoints()
     .MapStreetCatalogEndpoints()

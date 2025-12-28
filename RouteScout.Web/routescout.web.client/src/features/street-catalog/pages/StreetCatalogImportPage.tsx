@@ -51,7 +51,7 @@ const StreetCatalogImportPage = () => {
                     type="submit"
                     disabled={loading || !file}
                     className="px-4 py-2 rounded bg-blue-600 text-white text-sm disabled:opacity-40"
-                >{loading ? t('importingProgress') : t('importButton')}</button>
+                >{loading ? t('importingProgress') : t('import')}</button>
                 {status && <div className="text-sm">{status}</div>}
             </form>
         </div>

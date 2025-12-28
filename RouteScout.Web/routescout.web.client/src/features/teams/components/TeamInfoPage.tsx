@@ -60,7 +60,7 @@ export function TeamInfoPage({ team, teamId, onUpdated }: Props) {
     return (
         <div className="flex flex-col gap-4">
             <section className="bg-white rounded border border-gray-600 p-3">
-                <h3 className="font-semibold mb-3">{t('members')}</h3>
+                <h3 className="font-semibold mb-3">{t('teamTitle')}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <label className="flex flex-col gap-1">
                         <span className="text-xs text-gray-600">{t('name')}</span>

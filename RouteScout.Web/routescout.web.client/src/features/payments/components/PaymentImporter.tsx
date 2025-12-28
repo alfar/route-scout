@@ -1,10 +1,12 @@
 import React, { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface PaymentImporterProps {
     onUploaded?: () => void;
 }
 
 export function PaymentImporter({ onUploaded }: PaymentImporterProps) {
+    const { t } = useTranslation(['common']);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -15,7 +17,7 @@ export function PaymentImporter({ onUploaded }: PaymentImporterProps) {
 
         const file = fileInputRef.current?.files?.[0];
         if (!file) {
-            setError('Please select a CSV file.');
+            setError(t('pleaseSelectCsv'));
             return;
         }
 
@@ -32,12 +34,12 @@ export function PaymentImporter({ onUploaded }: PaymentImporterProps) {
 
             if (!response.ok) {
                 const message = await response.text();
-                setError(message || 'Upload failed.');
+                setError(message || t('uploadFailed'));
             } else {
                 if (onUploaded) onUploaded();
             }
         } catch (err) {
-            setError('Network error.');
+            setError(t('networkError'));
         } finally {
             setUploading(false);
         }
@@ -49,13 +51,13 @@ export function PaymentImporter({ onUploaded }: PaymentImporterProps) {
             className="flex flex-col md:flex-row items-center gap-4 p-4 bg-white rounded shadow mb-4"
         >
             <label className="flex flex-col md:flex-row items-center gap-2 font-medium text-gray-700">
-                <span>Upload CSV:</span>
+                <span>{t('uploadCsv')}</span>
                 <input
                     type="file"
                     accept=".csv"
                     ref={fileInputRef}
                     disabled={uploading}
-                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="block w-full text-sm text-gray-900 border border-gray-600 rounded cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </label>
             <button
@@ -66,7 +68,7 @@ export function PaymentImporter({ onUploaded }: PaymentImporterProps) {
                         : 'bg-blue-600 hover:bg-blue-700'
                     }`}
             >
-                {uploading ? 'Uploading...' : 'Upload'}
+                {uploading ? t('uploading') : t('upload')}
             </button>
             {error && (
                 <div className="w-full text-red-600 mt-2 text-sm">{error}</div>

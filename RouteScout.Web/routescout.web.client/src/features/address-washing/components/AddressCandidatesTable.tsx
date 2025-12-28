@@ -1,6 +1,7 @@
 import { AddressCandidate } from '../types/AddressCandidate';
 import { AddressSelector } from './AddressSelector';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     candidates: AddressCandidate[] | undefined;
@@ -11,17 +12,18 @@ interface Props {
 
 export function AddressCandidatesTable({ candidates, onReject, onConfirm, onSelectAddress }: Props) {
     const [selectingId, setSelectingId] = useState<string | null>(null);
+    const { t } = useTranslation(['common']);
 
     return (
         <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200 rounded shadow">
+            <table className="min-w-full bg-white border border-gray-600 rounded">
                 <thead className="bg-blue-100">
                     <tr>
-                        <th className="px-4 py-2 text-left">Raw Address</th>
-                        <th className="px-4 py-2 text-left">Selected Address</th>
-                        <th className="px-4 py-2 text-left">State</th>
-                        <th className="px-4 py-2 text-left">Washed</th>
-                        <th className="px-4 py-2 text-left">Actions</th>
+                        <th className="px-4 py-2 text-left">{t('rawAddress')}</th>
+                        <th className="px-4 py-2 text-left">{t('selectedAddress')}</th>
+                        <th className="px-4 py-2 text-left">{t('state')}</th>
+                        <th className="px-4 py-2 text-left">{t('washed')}</th>
+                        <th className="px-4 py-2 text-left">{t('actions')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -41,7 +43,7 @@ export function AddressCandidatesTable({ candidates, onReject, onConfirm, onSele
                                         </span>
                                     ) : (
                                         <span className="text-gray-400 italic cursor-pointer" onClick={() => setSelectingId(candidate.id)}>
-                                            Select address
+                                            {t('selectAddress')}
                                         </span>
                                     )}
                                     {selectingId === candidate.id && (
@@ -57,26 +59,26 @@ export function AddressCandidatesTable({ candidates, onReject, onConfirm, onSele
                                                     setSelectingId(null);
                                                 }}
                                             />
-                                            <button className="mt-1 text-xs text-gray-500 underline" onClick={() => setSelectingId(null)}>Cancel</button>
+                                            <button className="mt-1 text-xs text-gray-500 underline" onClick={() => setSelectingId(null)}>{t('cancel')}</button>
                                         </div>
                                     )}
                                 </td>
-                                <td className="px-4 py-2">{candidate.state}</td>
-                                <td className="px-4 py-2">{candidate.isWashed ? 'Yes' : 'No'}</td>
+                                <td className="px-4 py-2">{t('addressState' + candidate.state)}</td>
+                                <td className="px-4 py-2">{candidate.isWashed ? t('yes') : t('no')}</td>
                                 <td className="px-4 py-2 flex gap-2">
                                     <button
                                         className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50"
                                         onClick={() => onReject(candidate.id)}
                                         disabled={candidate.state === 'Rejected'}
                                     >
-                                        Reject
+                                        {t('reject')}
                                     </button>
                                     {candidate.state === 'Selected' && (
                                         <button
                                             className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
                                             onClick={() => onConfirm(candidate.id)}
                                         >
-                                            Confirm
+                                            {t('confirm')}
                                         </button>
                                     )}
                                 </td>

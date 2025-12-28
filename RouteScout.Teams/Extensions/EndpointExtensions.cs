@@ -11,12 +11,12 @@ public static class EndpointExtensions
     {
         var group = app.MapGroup("teams").WithTags("Teams");
 
-        group.MapPost("/", async (CreateTeam dto, ITeamService service, IQuerySession query) =>
+        group.MapPost("/", async (Guid projectId, CreateTeam dto, ITeamService service, IQuerySession query) =>
         {
             if (string.IsNullOrWhiteSpace(dto.LeaderName)) return Results.BadRequest("Leader name required");
-            var id = await service.CreateTeam(dto.TrailerSize, dto.LeaderName, dto.LeaderPhone);
+            var id = await service.CreateTeam(projectId, dto.TrailerSize, dto.LeaderName, dto.LeaderPhone);
             var summary = await query.LoadAsync<TeamSummary>(id);
-            return Results.Created($"/api/teams/{id}", new { id, summary?.Name });
+            return Results.Created($"/api/projects/{projectId}/teams/{id}", new { id, summary?.Name });
         });
 
         // Update team metadata (not members)
@@ -51,9 +51,11 @@ public static class EndpointExtensions
             return summary is null ? Results.NotFound() : Results.Ok(summary);
         });
 
-        group.MapGet("/", async (IQuerySession query) =>
+        group.MapGet("/", async (Guid projectId, IQuerySession query) =>
         {
-            var teams = await query.Query<TeamSummary>().ToListAsync();
+            var teams = await query.Query<TeamSummary>()
+                .Where(t => t.ProjectId == projectId)
+                .ToListAsync();
             return Results.Ok(teams);
         });
 

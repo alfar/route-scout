@@ -15,10 +15,10 @@ namespace RouteScout.AddressWashing.Services
             _addressChannel = addressChannel;
         }
 
-        public async Task<Guid> AddAddressCandidateAsync(string rawAddress, Guid? paymentId, int amount)
+        public async Task<Guid> AddAddressCandidateAsync(string rawAddress, Guid? paymentId, int amount, Guid projectId)
         {
             var id = Guid.NewGuid();
-            var @event = new AddressAdded(id, rawAddress.Trim(), DateTime.UtcNow, paymentId, amount);
+            var @event = new AddressAdded(id, projectId, rawAddress.Trim(), DateTime.UtcNow, paymentId, amount);
             _session.Events.Append(id, @event);
             await _session.SaveChangesAsync();
 

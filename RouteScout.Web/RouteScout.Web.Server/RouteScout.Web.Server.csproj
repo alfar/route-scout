@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\RouteScout.AddressWashing\RouteScout.AddressWashing.csproj" />
     <ProjectReference Include="..\..\RouteScout.Payments\RouteScout.Payments.csproj" />
+    <ProjectReference Include="..\..\RouteScout.Projects\RouteScout.Projects.csproj" />
     <ProjectReference Include="..\..\RouteScout.Routes\RouteScout.Routes.csproj" />
     <ProjectReference Include="..\..\RouteScout.Stream\RouteScout.Stream.csproj" />
     <ProjectReference Include="..\..\RouteScout.StreetCatalog\RouteScout.StreetCatalog.csproj" />

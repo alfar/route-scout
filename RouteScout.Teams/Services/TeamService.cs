@@ -13,15 +13,17 @@ public class TeamService : ITeamService
         _session = session;
     }
 
-    public async Task<Guid> CreateTeam(string trailerSize, string leaderName, string leaderPhone)
+    public async Task<Guid> CreateTeam(Guid projectId, string trailerSize, string leaderName, string leaderPhone)
     {
         var teamId = Guid.NewGuid();
 
         // Determine next sequential number by counting existing teams (projection snapshots)
-        var existingCount = await _session.Query<TeamSummary>().CountAsync(); // requires using RouteScout.Teams.Projections; but keep logic concise
+        var existingCount = await _session.Query<TeamSummary>()
+            .Where(t => t.ProjectId == projectId)
+            .CountAsync();
         var teamName = $"Team {existingCount + 1}";
 
-        var created = new TeamCreated(teamId, teamName, trailerSize, leaderName, leaderPhone);
+        var created = new TeamCreated(teamId, projectId, teamName, trailerSize, leaderName, leaderPhone);
         _session.Events.Append(teamId, created);
         await _session.SaveChangesAsync();
         return teamId;

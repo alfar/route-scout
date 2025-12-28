@@ -5,6 +5,7 @@ namespace RouteScout.Payments.Domain;
 public class Payment
 {
     public Guid Id { get; private set; }
+    public Guid ProjectId { get; private set; }
     public string RawText { get; private set; } = default!;
     public decimal Amount { get; private set; }
     public DateTimeOffset Timestamp { get; private set; }
@@ -15,6 +16,7 @@ public class Payment
     public void Apply(PaymentImported e)
     {
         Id = e.PaymentId;
+        ProjectId = e.ProjectId;
         RawText = e.Message;
         Amount = e.Amount;
         Timestamp = e.Timestamp;
@@ -39,9 +41,9 @@ public class Payment
 
     // Factory method
     public static IEnumerable<object> ImportTransfer(
-        string rawText, decimal amount, DateTimeOffset timestamp, string csvLineHash)
+        Guid projectId, string rawText, decimal amount, DateTimeOffset timestamp, string csvLineHash)
     {
-        yield return new PaymentImported(Guid.NewGuid(), rawText, amount, timestamp, csvLineHash);
+        yield return new PaymentImported(Guid.NewGuid(), projectId, rawText, amount, timestamp, csvLineHash);
     }
 
     public IEnumerable<object> Confirm()

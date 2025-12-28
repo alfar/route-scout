@@ -15,13 +15,13 @@ public class IssueService : IIssueService
         _stream = stream;
     }
 
-    public async Task<Guid> CreateIssue(string type, string text)
+    public async Task<Guid> CreateIssue(Guid projectId, string type, string text)
     {
         if (string.IsNullOrWhiteSpace(type)) throw new ArgumentException("Type required", nameof(type));
         if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("Text required", nameof(text));
 
         var id = Guid.NewGuid();
-        var evt = new IssueCreated(id, DateTimeOffset.UtcNow, type.Trim(), text.Trim());
+        var evt = new IssueCreated(id, projectId, DateTimeOffset.UtcNow, type.Trim(), text.Trim());
         _session.Events.StartStream<Domain.Issue>(id, evt);
         await _session.SaveChangesAsync();
 

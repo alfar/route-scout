@@ -6,6 +6,7 @@ namespace RouteScout.AddressWashing.Projections
     public class AddressCandidateSummary
     {
         public Guid Id { get; set; }
+        public Guid ProjectId { get; set; }
         public string RawText { get; set; } = string.Empty;
         public bool IsWashed { get; set; }
         public WashResult? LastWashResult { get; set; }
@@ -17,6 +18,7 @@ namespace RouteScout.AddressWashing.Projections
         public void Apply(AddressAdded @event)
         {
             Id = @event.Id;
+            ProjectId = @event.ProjectId;
             RawText = @event.RawText;
             State = "New";
             PaymentId = @event.PaymentId;

@@ -23,7 +23,7 @@ public class PaymentService
         public decimal Amount { get; set; }
     }
 
-    public async Task ImportCsv(Stream csvStream)
+    public async Task ImportCsv(Guid projectId, Stream csvStream)
     {
         using var reader = new StreamReader(csvStream);
         using var csv = new CsvHelper.CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture)
@@ -79,9 +79,9 @@ public class PaymentService
 
             var hash = ComputeHash(message, amount, timestamp);
 
-            // Check if this hash already exists (duplicate)
+            // Check if this hash already exists (duplicate) - scoped to project
             var duplicate = await _session.Query<PaymentSummary>()
-                .FirstOrDefaultAsync(p => p.CsvLineHash == hash);
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.CsvLineHash == hash);
 
             if (duplicate is not null)
             {
@@ -93,7 +93,7 @@ public class PaymentService
             }
             else
             {
-                var events = Payment.ImportTransfer(message, amount, timestamp, hash);
+                var events = Payment.ImportTransfer(projectId, message, amount, timestamp, hash);
                 _session.Events.StartStream<Payment>(Guid.NewGuid(), events.ToArray());
             }
         }

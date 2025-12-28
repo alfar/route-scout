@@ -5,6 +5,7 @@ namespace RouteScout.AddressWashing.Domain;
 public class AddressCandidate
 {
     public Guid Id { get; private set; }
+    public Guid ProjectId { get; private set; }
     public string RawText { get; private set; } = string.Empty;
     public bool IsWashed { get; private set; }
     public WashResult? LastWashResult { get; private set; }
@@ -18,15 +19,16 @@ public class AddressCandidate
 
     public AddressCandidate() { }
 
-    public AddressCandidate(Guid id, string rawText, Guid? paymentId, int amount)
+    public AddressCandidate(Guid id, Guid projectId, string rawText, Guid? paymentId, int amount)
     {
-        var @event = new AddressAdded(id, rawText, DateTime.UtcNow, paymentId, amount);
+        var @event = new AddressAdded(id, projectId, rawText, DateTime.UtcNow, paymentId, amount);
         Apply(@event);
     }
 
     public void Apply(AddressAdded @event)
     {
         Id = @event.Id;
+        ProjectId = @event.ProjectId;
         RawText = @event.RawText;
         State = "New";
         PaymentId = @event.PaymentId;

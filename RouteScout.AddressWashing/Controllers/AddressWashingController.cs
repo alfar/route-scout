@@ -16,20 +16,23 @@ using System.Threading.Tasks;
 
 public static class AddressWashingController
 {
-    public static async Task<IResult> AddAddressTextAsync([FromBody] AddAddressDto dto, IAddressCandidateService addressCandidateService)
+    public static async Task<IResult> AddAddressTextAsync(Guid projectId, [FromBody] AddAddressDto dto, IAddressCandidateService addressCandidateService)
     {
         if (dto == null || string.IsNullOrWhiteSpace(dto.RawAddress))
             return Results.BadRequest("raw address required");
 
-        var id = await addressCandidateService.AddAddressCandidateAsync(dto.RawAddress, dto.PaymentId, dto.Amount);
+        var id = await addressCandidateService.AddAddressCandidateAsync(dto.RawAddress, dto.PaymentId, dto.Amount, projectId);
 
-        return Results.Created($"/api/address-candidates/{id}", new { id });
+        return Results.Created($"/api/projects/{projectId}/address-candidates/{id}", new { id });
     }
 
-    public static async Task<IResult> GetCandidatesAsync(IQuerySession q)
+    public static async Task<IResult> GetCandidatesAsync(Guid projectId, IQuerySession q)
     {
-        // For simplicity: list latest AddressAdded events turned into a view.
-        var addressCandidates = await q.Query<AddressCandidateSummary>().Where(a => a.State != "Rejected" && a.State != "Confirmed").Take(100).ToListAsync();
+        // Filter by projectId
+        var addressCandidates = await q.Query<AddressCandidateSummary>()
+            .Where(a => a.ProjectId == projectId && a.State != "Rejected" && a.State != "Confirmed")
+            .Take(100)
+            .ToListAsync();
 
         return Results.Ok(addressCandidates);
     }

@@ -12,10 +12,11 @@ namespace RouteScout.Route
             _session = session;
         }
 
-        public async Task CreateStop(Guid addressId, Guid streetId, string streetName, string houseNumber, int amount, int sortOrder, Guid areaId, string areaName, double? latitude, double? longitude)
+        public async Task CreateStop(Guid projectId, Guid addressId, Guid streetId, string streetName, string houseNumber, int amount, int sortOrder, Guid areaId, string areaName, double? latitude, double? longitude)
         {
             var stopCreated = new StopCreated(
                 Guid.NewGuid(), // StopId
+                projectId,
                 addressId,
                 streetId,
                 streetName,

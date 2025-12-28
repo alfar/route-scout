@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteScout.StreetCatalog", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteScout.Stream", "RouteScout.Stream\RouteScout.Stream.csproj", "{7D910705-2BE8-F111-71BE-20BF96E69253}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteScout.Projects", "RouteScout.Projects\RouteScout.Projects.csproj", "{C9AD1D27-362E-1003-BF02-38B95300AE9D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{7D910705-2BE8-F111-71BE-20BF96E69253}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D910705-2BE8-F111-71BE-20BF96E69253}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D910705-2BE8-F111-71BE-20BF96E69253}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9AD1D27-362E-1003-BF02-38B95300AE9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9AD1D27-362E-1003-BF02-38B95300AE9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9AD1D27-362E-1003-BF02-38B95300AE9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9AD1D27-362E-1003-BF02-38B95300AE9D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

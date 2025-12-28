@@ -6,6 +6,7 @@ using RouteScout.AddressWashing.IntegrationPoints;
 using RouteScout.Payments.Endpoints;
 using RouteScout.Payments.Extensions;
 using RouteScout.Payments.IntegrationPoints;
+using RouteScout.Projects.Extensions;
 using RouteScout.Routes.Extensions;
 using RouteScout.Stream.Extensions;
 using RouteScout.StreetCatalog.Extensions;
@@ -44,6 +45,7 @@ builder.Services.AddHttpsRedirection(options =>
 // Add services to the container.
 builder.Services.AddAddressWashing();
 builder.Services.AddPayments();
+builder.Services.AddProjects();
 builder.Services.AddRoutes();
 builder.Services.AddTeams();
 builder.Services.AddStream();
@@ -65,6 +67,7 @@ builder.Services.AddMarten(opts =>
     // Register event types and projections
     opts.AddAddressWashingEventTypesAndProjections();
     opts.AddPaymentsEventTypesAndProjections();
+    opts.AddProjectsEventTypesAndProjections();
     opts.AddRoutesEventTypesAndProjections();
     opts.AddTeamsEventTypesAndProjections();
 
@@ -98,13 +101,19 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-app.MapGroup("/api")
+// Nest all API endpoints under /api/projects/{projectId:guid}
+app.MapGroup("/api/projects/{projectId:guid}")
     .MapAddressWashingEndpoints()
     .MapPaymentEndpoints()
     .MapRouteEndpoints()
-    .MapStreetCatalogEndpoints()
-    .MapStreamEndpoints()
     .MapTeamEndpoints();
+
+// Project management endpoints (not scoped by projectId)
+// StreetCatalog and Stream endpoints don't need project scoping
+app.MapGroup("/api")
+    .MapProjectEndpoints()
+    .MapStreetCatalogEndpoints()
+    .MapStreamEndpoints();
 
 app.MapFallbackToFile("/index.html");
 

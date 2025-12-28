@@ -6,6 +6,7 @@ public class Stop
 {
     // Marten aggregate root convention
     public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
     public Guid AddressId { get; set; }
     public Guid StreetId { get; set; }
     public string StreetName { get; set; } = string.Empty;
@@ -24,6 +25,7 @@ public class Stop
     public void Apply(StopCreated e)
     {
         Id = e.StopId;
+        ProjectId = e.ProjectId;
         AddressId = e.AddressId;
         StreetId = e.StreetId;
         StreetName = e.StreetName;

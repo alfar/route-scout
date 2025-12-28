@@ -15,9 +15,12 @@ namespace RouteScout.Routes.Extensions
             var stopGroup = app.MapGroup("/stops").WithTags("Stops");
 
             // Stops Endpoints
-            stopGroup.MapGet("", async (IDocumentSession session) =>
+            stopGroup.MapGet("", async (Guid projectId, IDocumentSession session) =>
             {
-                var stops = await session.Query<StopSummary>().Where(s => !s.Deleted).OrderBy(s => s.SortOrder).ToListAsync();
+                var stops = await session.Query<StopSummary>()
+                    .Where(s => s.ProjectId == projectId && !s.Deleted)
+                    .OrderBy(s => s.SortOrder)
+                    .ToListAsync();
                 return Results.Ok(stops);
             });
 
@@ -101,9 +104,11 @@ namespace RouteScout.Routes.Extensions
             // Routes Endpoints
             var routeGroup = app.MapGroup("/routes").WithTags("Routes");
 
-            routeGroup.MapGet("", async (IDocumentSession session) =>
+            routeGroup.MapGet("", async (Guid projectId, IDocumentSession session) =>
             {
-                var routes = await session.Query<RouteSummary>().Where(r => !r.Deleted).ToListAsync();
+                var routes = await session.Query<RouteSummary>()
+                    .Where(r => r.ProjectId == projectId && !r.Deleted)
+                    .ToListAsync();
                 return Results.Ok(routes);
             });
 
@@ -114,15 +119,15 @@ namespace RouteScout.Routes.Extensions
             });
 
             // New: Get routes by team
-            routeGroup.MapGet("/team/{teamId:guid}", async (IDocumentSession session, Guid teamId) =>
+            routeGroup.MapGet("/team/{teamId:guid}", async (Guid projectId, IDocumentSession session, Guid teamId) =>
             {
                 var teamRoutes = await session.Query<RouteSummary>()
-                    .Where(r => r.TeamId == teamId && !r.Deleted && !r.Completed)
+                    .Where(r => r.ProjectId == projectId && r.TeamId == teamId && !r.Deleted && !r.Completed)
                     .ToListAsync();
                 return Results.Ok(teamRoutes);
             });
-
-            routeGroup.MapPost("", async (IDocumentSession session, CreateRoute dto) =>
+            
+            routeGroup.MapPost("", async (Guid projectId, IDocumentSession session, CreateRoute dto) =>
             {
                 // Load current area sequence aggregate (event-sourced)
                 var areaSeq = await session.LoadAsync<RouteAreaSequence>(dto.AreaId);
@@ -133,7 +138,7 @@ namespace RouteScout.Routes.Extensions
                 var routeName = string.IsNullOrWhiteSpace(dto.AreaName) ? dto.AreaName : $"{dto.AreaName} - {currentSeq}";
 
                 // Start route stream
-                var evt = new RouteCreated(routeId, routeName, dto.DropOffPoint);
+                var evt = new RouteCreated(routeId, projectId, routeName, dto.DropOffPoint);
                 session.Events.StartStream<Domain.Route>(routeId, evt);
 
                 // Emit RouteCreatedInArea to area sequence stream (start new if missing)
@@ -148,7 +153,7 @@ namespace RouteScout.Routes.Extensions
                 }
 
                 await session.SaveChangesAsync();
-                return Results.Created($"/routes/{routeId}", routeId);
+                return Results.Created($"/api/projects/{projectId}/routes/{routeId}", routeId);
             });
 
             routeGroup.MapDelete("/{id:guid}", async (IDocumentSession session, Guid id) =>

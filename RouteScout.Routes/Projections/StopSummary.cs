@@ -6,6 +6,7 @@ namespace RouteScout.Routes.Projections
     public class StopSummary
     {
         public Guid Id { get; set; }
+        public Guid ProjectId { get; set; }
         public Guid AddressId { get; set; }
         public Guid StreetId { get; set; }
         public string StreetName { get; set; } = string.Empty;
@@ -24,6 +25,7 @@ namespace RouteScout.Routes.Projections
         public static StopSummary Create(StopCreated e) => new()
         {
             Id = e.StopId,
+            ProjectId = e.ProjectId,
             AddressId = e.AddressId,
             StreetId = e.StreetId,
             StreetName = e.StreetName,

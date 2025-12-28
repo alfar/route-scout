@@ -6,6 +6,7 @@ namespace RouteScout.Payments.Projections;
 public class PaymentSummary
 {
     public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
     public string CsvLineHash { get; set; } = "";
     public string Message { get; set; } = "";
     public decimal Amount { get; set; }
@@ -17,6 +18,7 @@ public class PaymentSummary
     public void Apply(PaymentImported e)
     {
         Id = e.PaymentId;
+        ProjectId = e.ProjectId;
         CsvLineHash = e.CsvLineHash;
         Message = e.Message;
         Amount = e.Amount;

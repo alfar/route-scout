@@ -72,7 +72,7 @@ namespace RouteScout.Web.Server.Integration.AddressWashing
 
             int sortOrder = CombineSort(area?.SortOrder ?? 0, street?.SortOrder ?? 0, segmentSort, withinSegment);
 
-            await _stopService.CreateStop(selectedAddress.Id, selectedAddress.StreetId, selectedAddress.Street, selectedAddress.Number, candidate.Amount, sortOrder, area!.Id, area!.Name, selectedAddress.Latitude, selectedAddress.Longitude);
+            await _stopService.CreateStop(candidate.ProjectId, selectedAddress.Id, selectedAddress.StreetId, selectedAddress.Street, selectedAddress.Number, candidate.Amount, sortOrder, area!.Id, area!.Name, selectedAddress.Latitude, selectedAddress.Longitude);
         }
 
         private static int ParseHouseNumber(string number)

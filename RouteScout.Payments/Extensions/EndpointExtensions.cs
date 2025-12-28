@@ -11,14 +11,14 @@ public static class EndpointExtensions
     {
         var group = app.MapGroup("/payments").WithTags("Payments");
 
-        group.MapPost("/import", async (HttpRequest request, PaymentService service) =>
+        group.MapPost("/import", async (Guid projectId, HttpRequest request, PaymentService service) =>
         {
             var file = request.Form.Files.GetFile("file");
             if (file is null)
                 return Results.BadRequest("No file uploaded");
 
             await using var stream = file.OpenReadStream();
-            await service.ImportCsv(stream);
+            await service.ImportCsv(projectId, stream);
             return Results.Ok("CSV processed");
         });
 
@@ -57,9 +57,11 @@ public static class EndpointExtensions
             return Results.Ok("Payment rejected");
         });
 
-        group.MapGet("/", async (IDocumentSession session) =>
+        group.MapGet("/", async (Guid projectId, IDocumentSession session) =>
         {
-            var payments = await session.Query<PaymentSummary>().Where(p => !p.Confirmed && !p.Rejected && p.OriginalId == Guid.Empty).ToListAsync();
+            var payments = await session.Query<PaymentSummary>()
+                .Where(p => p.ProjectId == projectId && !p.Confirmed && !p.Rejected && p.OriginalId == Guid.Empty)
+                .ToListAsync();
             return Results.Ok(payments);
         });
 

@@ -23,7 +23,7 @@ namespace RouteScout.Web.Server.Integration.Payments
             var payment = await session.Events.AggregateStreamAsync<Payment>(paymentId);
             if (payment != null && payment.Confirmed)
             {
-                await _addressCandidateService.AddAddressCandidateAsync(payment.RawText, paymentId, (int)(payment.Amount / PaymentConstants.PricePerTree));
+                await _addressCandidateService.AddAddressCandidateAsync(payment.RawText, paymentId, (int)(payment.Amount / PaymentConstants.PricePerTree), payment.ProjectId);
             }
         }
     }

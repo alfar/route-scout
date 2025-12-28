@@ -5,6 +5,7 @@ namespace RouteScout.Routes.Projections
     public class RouteSummary
     {
         public Guid Id { get; set; }
+        public Guid ProjectId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string DropOffPoint { get; set; } = string.Empty;
         public List<Guid> Stops { get; set; } = new();
@@ -18,6 +19,7 @@ namespace RouteScout.Routes.Projections
         public static RouteSummary Create(RouteCreated e) => new()
         {
             Id = e.RouteId,
+            ProjectId = e.ProjectId,
             Name = e.Name,
             DropOffPoint = e.DropOffPoint,
             Stops = new List<Guid>(),

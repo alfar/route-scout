@@ -5,6 +5,7 @@ namespace RouteScout.Teams.Projections;
 public class TeamSummary
 {
     public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string TrailerSize { get; set; } = string.Empty;
     public string LeaderName { get; set; } = string.Empty;
@@ -14,6 +15,7 @@ public class TeamSummary
     public void Apply(TeamCreated e)
     {
         Id = e.TeamId;
+        ProjectId = e.ProjectId;
         Name = e.TeamName;
         TrailerSize = e.TrailerSize;
         LeaderName = e.LeaderName;

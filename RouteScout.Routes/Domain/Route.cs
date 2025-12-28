@@ -6,6 +6,7 @@ public class Route
 {
     // Marten aggregate root convention
     public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string DropOffPoint { get; set; } = string.Empty;
     public List<Guid> Stops { get; set; } = new(); // Ordered list of StopIds
@@ -20,6 +21,7 @@ public class Route
     public void Apply(RouteCreated e)
     {
         Id = e.RouteId;
+        ProjectId = e.ProjectId;
         Name = e.Name;
         DropOffPoint = e.DropOffPoint;
         Stops = new List<Guid>();

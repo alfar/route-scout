@@ -21,5 +21,5 @@
   "teamsSectionTitle": "Patruljer",
   "dragHereCreateRoute": "Træk en patrulje eller en trailer hertil for at oprette en passende rute",
   "dropRouteClearTeam": "Træk en rute hertil for at fjerne den fra en patrulje",
-  "dragAssignHints": "Træk en rute ind på et hold for at tildele den"
+  "dragTeamHints": "Træk en trailer hertil for at oprette en patrulje. Træk en rute ind på en patrulje for at tildele den"
 }

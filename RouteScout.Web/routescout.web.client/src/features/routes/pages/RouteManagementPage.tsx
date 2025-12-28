@@ -6,7 +6,7 @@ import { DroppableTeam } from '../components/DroppableTeam';
 import { TeamSummary } from '../../teams/types/TeamSummary';
 import DroppableContainer from '../components/DroppableContainer';
 import DraggableCapacityIcon from '../components/DraggableCapacityIcon';
-import { TrashIcon, TruckIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { getTrailerCapacity } from '../functions/TrailerFunctions';
 import { useEventSource } from '../../stream/context/EventSourceContext';
 import TeamLabel from '../components/TeamLabel';
@@ -294,6 +294,18 @@ const RouteManagementPage: React.FC = () => {
         await fetch(`/api/routes/${routeId}/completed`, { method: 'POST' });
     };
 
+    const createTeamWithTrailerSize = async (kind: TrailerKind) => {
+        await fetch('/api/teams', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ trailerSize: kind, leaderName: "Ukendt", leaderPhone: "" })
+        });
+        // refresh team list
+        const res = await fetch('/api/teams');
+        const data = await res.json();
+        setTeams(data);
+    };
+
     const handleDragStart = (event: any) => {
         const [_, type, id] = (event.active?.id as string ?? '').split('/', 3);
 
@@ -431,7 +443,11 @@ const RouteManagementPage: React.FC = () => {
             case 'capacity': {
                 const kind = activeId as TrailerKind;
                 const capacity = getTrailerCapacity(kind);
-                await createRouteFromUnassignedCapacity(capacity);
+                if (overType === 'team' && overId === 'new') {
+                    await createTeamWithTrailerSize(kind);
+                } else {
+                    await createRouteFromUnassignedCapacity(capacity);
+                }
                 break;
             }
             case 'team': {
@@ -544,15 +560,15 @@ const RouteManagementPage: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="md:col-span-1">
-                                <h2 className="text-xl font-semibold mb-2">{t('trailersSectionTitle')}</h2>
-                                <Container>
-                                    <div className="flex flex-col gap-2 mb-2 justify-items-stretch">
-                                        {/* Draggable capacity icons */}
-                                        <DraggableCapacityIcon kind="small" />
-                                        <DraggableCapacityIcon kind="large" />
-                                        <DraggableCapacityIcon kind="boogie" />
-                                    </div>
-                                </Container>
+                            <h2 className="text-xl font-semibold mb-2">{t('trailersSectionTitle')}</h2>
+                            <Container>
+                                <div className="flex flex-col gap-2 mb-2 justify-items-stretch">
+                                    {/* Draggable capacity icons */}
+                                    <DraggableCapacityIcon kind="small" />
+                                    <DraggableCapacityIcon kind="large" />
+                                    <DraggableCapacityIcon kind="boogie" />
+                                </div>
+                            </Container>
                             <h2 className="text-xl font-semibold mb-2">{t('stopsSectionTitle')}</h2>
                             <DroppableContainer id="unassign/stop">
                                 <div className="text-xs text-gray-500">{t('dragHereCreateRoute')}</div>
@@ -590,12 +606,14 @@ const RouteManagementPage: React.FC = () => {
 
                         <div className="md:col-span-1">
                             <h2 className="text-xl font-semibold mb-2">{t('teamsSectionTitle')}</h2>
-                            <div className="border border-gray-400 rounded p-3 flex flex-col gap-2">
-                                <div className="text-xs text-gray-500 mb-2">{t('dragAssignHints')}</div>
-                                {teams.map(t => (
-                                    <DroppableTeam key={t.id} team={t} routes={routes.filter(r => r.teamId === t.id)} stops={stops} teams={teams} />
-                                ))}
-                            </div>
+                            <DroppableContainer id="team/new">
+                                <div className="border border-gray-400 rounded p-3 flex flex-col gap-2">
+                                    <div className="text-xs text-gray-500 mb-2">{t('dragTeamHints')}</div>
+                                    {teams.map(t => (
+                                        <DroppableTeam key={t.id} team={t} routes={routes.filter(r => r.teamId === t.id)} stops={stops} teams={teams} />
+                                    ))}
+                                </div>
+                            </DroppableContainer>
                         </div>
                     </div>
                 )

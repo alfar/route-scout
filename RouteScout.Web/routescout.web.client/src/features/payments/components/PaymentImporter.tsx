@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 interface PaymentImporterProps {
@@ -6,6 +7,7 @@ interface PaymentImporterProps {
 }
 
 export function PaymentImporter({ onUploaded }: PaymentImporterProps) {
+    const { projectId } = useParams<{ projectId: string }>();
     const { t } = useTranslation(['common']);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
@@ -27,7 +29,7 @@ export function PaymentImporter({ onUploaded }: PaymentImporterProps) {
         formData.append('file', file);
 
         try {
-            const response = await fetch('/api/payments/import', {
+            const response = await fetch(`/api/projects/${projectId}/payments/import`, {
                 method: 'POST',
                 body: formData,
             });

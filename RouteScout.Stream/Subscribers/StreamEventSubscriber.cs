@@ -2,6 +2,7 @@
 using JasperFx.Events.Projections;
 using Marten;
 using Marten.Subscriptions;
+using RouteScout.Contracts;
 using RouteScout.Stream.Services;
 
 namespace RouteScout.Stream.Subscribers
@@ -21,7 +22,15 @@ namespace RouteScout.Stream.Subscribers
             {
                 var eventType = @event.EventType.Name;
                 var data = @event.Data;
-                await _streamService.PublishAsync(eventType, data);
+                
+                // Extract ProjectId from events that implement IProjectEvent
+                Guid? projectId = null;
+                if (data is IProjectEvent projectEvent)
+                {
+                    projectId = projectEvent.ProjectId;
+                }
+                
+                await _streamService.PublishAsync(eventType, data, projectId);
             }
 
             return NullChangeListener.Instance;

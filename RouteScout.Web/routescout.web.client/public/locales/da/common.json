@@ -11,6 +11,7 @@
   "openRoutesPage": "Vis patruljeside",
   "shareQr": "Scan for at dele patruljen",
   "home": "Hjem",
+  "projects": "Projekter",
   "payments": "Indbetalinger",
   "addressWashing": "Adressevask",
   "routeManagement": "Dispatch",
@@ -50,6 +51,17 @@
   "addressStateRejected": "Afvist",
   "addressStateGivenUp": "Opgivet",
   "import": "Importér",
-  "importProgress": "Importerer..."
-
+  "importProgress": "Importerer...",
+  "projectsTitle": "Projekter",
+  "projectsDescription": "Administrer dine RouteScout-projekter. Opret nye projekter eller vælg et eksisterende projekt at arbejde med.",
+  "projectName": "Projektnavn",
+  "createdAt": "Oprettet",
+  "open": "Åbn",
+  "noProjects": "Ingen projekter fundet. Opret dit første projekt for at komme i gang.",
+  "createNewProject": "Opret nyt projekt",
+  "enterProjectName": "Indtast projektnavn...",
+  "createProject": "Opret projekt",
+  "creating": "Opretter...",
+  "createProjectFailed": "Kunne ikke oprette projekt.",
+  "allProjects": "Alle projekter"
 }

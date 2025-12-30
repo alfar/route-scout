@@ -1,3 +1,5 @@
+using RouteScout.Contracts;
+
 namespace RouteScout.Routes.Domain.Events;
 
-public record RouteCutShort(Guid RouteId);
+public record RouteCutShort(Guid RouteId, Guid ProjectId) : IProjectEvent;

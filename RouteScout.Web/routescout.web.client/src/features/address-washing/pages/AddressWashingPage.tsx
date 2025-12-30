@@ -1,35 +1,39 @@
 import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { AddressCandidate } from '../types/AddressCandidate';
 import { AddressCandidatesTable } from '../components/AddressCandidatesTable';
 import { useTranslation } from 'react-i18next';
 
 function AddressWashingPage() {
+    const { projectId } = useParams<{ projectId: string }>();
     const [candidates, setCandidates] = useState<AddressCandidate[]>();
     const { t } = useTranslation(['common']);
 
     useEffect(() => {
-        populateCandidates();
-    }, []);
+        if (projectId) {
+            populateCandidates();
+        }
+    }, [projectId]);
 
     async function handleReject(id: string) {
-        await fetch(`/api/address-candidates/${id}/reject`, { method: 'POST' });
+        await fetch(`/api/projects/${projectId}/address-candidates/${id}/reject`, { method: 'POST' });
         await populateCandidates();
     }
 
     async function handleConfirm(id: string) {
-        await fetch(`/api/address-candidates/${id}/confirm`, { method: 'POST' });
+        await fetch(`/api/projects/${projectId}/address-candidates/${id}/confirm`, { method: 'POST' });
         await populateCandidates();
     }
 
     async function handleSelectAddress(candidateId: string, addressId: string) {
-        await fetch(`/api/address-candidates/${candidateId}/select/${addressId}`, {
+        await fetch(`/api/projects/${projectId}/address-candidates/${candidateId}/select/${addressId}`, {
             method: 'POST'
         });
         await populateCandidates();
     };
 
     async function populateCandidates() {
-        const response = await fetch('/api/address-candidates');
+        const response = await fetch(`/api/projects/${projectId}/address-candidates`);
         const data = await response.json();
         setCandidates(data);
     }

@@ -4,12 +4,12 @@ namespace RouteScout.Stream.Services;
 
 public class StreamService
 {
-    private readonly ConcurrentDictionary<Guid, Func<string, object, Task>> _subscribers = new();
+    private readonly ConcurrentDictionary<Guid, (Guid? ProjectId, Func<string, object, Task> Handler)> _subscribers = new();
 
-    public Guid Subscribe(Func<string, object, Task> handler)
+    public Guid Subscribe(Guid? projectId, Func<string, object, Task> handler)
     {
         var id = Guid.NewGuid();
-        _subscribers[id] = handler;
+        _subscribers[id] = (projectId, handler);
         return id;
     }
 
@@ -18,12 +18,16 @@ public class StreamService
         _subscribers.TryRemove(id, out _);
     }
 
-    public async Task PublishAsync(string type, object payload)
+    public async Task PublishAsync(string type, object payload, Guid? projectId)
     {
-        var handlers = _subscribers.Values.ToArray();
-        foreach (var h in handlers)
+        var matchingSubscribers = _subscribers.Values
+            .Where(s => s.ProjectId == null || s.ProjectId == projectId)
+            .Select(s => s.Handler)
+            .ToArray();
+
+        foreach (var handler in matchingSubscribers)
         {
-            await h(type, payload);
+            await handler(type, payload);
         }
     }
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { DndContext, DragOverlay, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import RouteList from '../components/RouteList';
 import UnassignedStopList from '../components/UnassignedStopList';
@@ -67,6 +68,7 @@ type HoveredItem =
     | { type: 'trash-route' };
 
 const RouteManagementPage: React.FC = () => {
+    const { projectId } = useParams<{ projectId: string }>();
     const [routes, setRoutes] = useState<RouteSummary[]>([]);
     const [stops, setStops] = useState<StopSummary[]>([]);
     const [teams, setTeams] = useState<TeamSummary[]>([]);
@@ -90,12 +92,13 @@ const RouteManagementPage: React.FC = () => {
     );
 
     const fetchData = async () => {
+        if (!projectId) return;
         setLoading(true);
         try {
             const [routesRes, stopsRes, teamsRes] = await Promise.all([
-                fetch('/api/routes'),
-                fetch('/api/stops'),
-                fetch('/api/teams')
+                fetch(`/api/projects/${projectId}/routes`),
+                fetch(`/api/projects/${projectId}/stops`),
+                fetch(`/api/projects/${projectId}/teams`)
             ]);
             const routesData = await routesRes.json();
             const stopsData = await stopsRes.json();
@@ -113,7 +116,7 @@ const RouteManagementPage: React.FC = () => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [projectId]);
 
     // Listen for RouteCreated events from SSE and refresh routes
     useEffect(() => {
@@ -267,7 +270,7 @@ const RouteManagementPage: React.FC = () => {
     }, [es]);
 
     const handleAssignStop = async (stopId: string, routeId: string) => {
-        await fetch(`/api/routes/${routeId}/stops/${stopId}`, {
+        await fetch(`/api/projects/${projectId}/routes/${routeId}/stops/${stopId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ position: 0 })
@@ -275,33 +278,33 @@ const RouteManagementPage: React.FC = () => {
     };
 
     const handleUnassignStop = async (stopId: string) => {
-        await fetch(`/api/stops/${stopId}/unassign`, { method: 'POST' });
+        await fetch(`/api/projects/${projectId}/stops/${stopId}/unassign`, { method: 'POST' });
     };
 
     const handleAssignRouteToTeam = async (routeId: string, teamId: string) => {
-        await fetch(`/api/routes/${routeId}/assign-team/${teamId}`, { method: 'POST' });
+        await fetch(`/api/projects/${projectId}/routes/${routeId}/assign-team/${teamId}`, { method: 'POST' });
     };
 
     const handleUnassignRouteFromTeam = async (routeId: string) => {
-        await fetch(`/api/routes/${routeId}/unassign-team`, { method: 'POST' });
+        await fetch(`/api/projects/${projectId}/routes/${routeId}/unassign-team`, { method: 'POST' });
     };
 
     const handleDeleteRoute = async (routeId: string) => {
-        await fetch(`/api/routes/${routeId}`, { method: 'DELETE' });
+        await fetch(`/api/projects/${projectId}/routes/${routeId}`, { method: 'DELETE' });
     };
 
     const handleCompleteRoute = async (routeId: string) => {
-        await fetch(`/api/routes/${routeId}/completed`, { method: 'POST' });
+        await fetch(`/api/projects/${projectId}/routes/${routeId}/completed`, { method: 'POST' });
     };
 
     const createTeamWithTrailerSize = async (kind: TrailerKind) => {
-        await fetch('/api/teams', {
+        await fetch(`/api/projects/${projectId}/teams`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ trailerSize: kind, leaderName: "Ukendt", leaderPhone: "" })
         });
         // refresh team list
-        const res = await fetch('/api/teams');
+        const res = await fetch(`/api/projects/${projectId}/teams`);
         const data = await res.json();
         setTeams(data);
     };
@@ -399,7 +402,7 @@ const RouteManagementPage: React.FC = () => {
     const createRouteFromUnassignedCapacity = async (capacity: number) => {
         const selected = selectStopsByTreeCapacity(capacity);
         if (selected.length === 0) return;
-        const createRes = await fetch('/api/routes', {
+        const createRes = await fetch(`/api/projects/${projectId}/routes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ areaId: selected[0].areaId, areaName: selected[0].areaName, dropOffPoint: 'Almindsøhytten' })
@@ -415,7 +418,7 @@ const RouteManagementPage: React.FC = () => {
         const selected = selectStopsByTreeCapacity(capacity);
         if (selected.length === 0) return;
 
-        const createRes = await fetch('/api/routes', {
+        const createRes = await fetch(`/api/projects/${projectId}/routes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ areaId: selected[0].areaId, areaName: selected[0].areaName, dropOffPoint: 'Almindsøhytten' })
@@ -485,7 +488,7 @@ const RouteManagementPage: React.FC = () => {
                             }
                             const base = selected[0];
                             if (base && selected.length > 0) {
-                                const createRes = await fetch('/api/routes', {
+                                const createRes = await fetch(`/api/projects/${projectId}/routes`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ areaId: base.areaId, areaName: base.areaName, dropOffPoint: route.dropOffPoint })

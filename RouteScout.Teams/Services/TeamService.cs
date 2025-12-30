@@ -29,9 +29,9 @@ public class TeamService : ITeamService
         return teamId;
     }
 
-    public async Task UpdateTeam(Guid teamId, string teamName, string trailerSize, string leaderName, string leaderPhone)
+    public async Task UpdateTeam(Guid teamId, Guid projectId, string teamName, string trailerSize, string leaderName, string leaderPhone)
     {
-        var updated = new TeamUpdated(teamId, teamName, trailerSize, leaderName, leaderPhone);
+        var updated = new TeamUpdated(teamId, projectId, teamName, trailerSize, leaderName, leaderPhone);
         _session.Events.Append(teamId, updated);
         await _session.SaveChangesAsync();
     }

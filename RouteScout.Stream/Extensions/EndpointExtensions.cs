@@ -13,7 +13,8 @@ public static class EndpointExtensions
     {
         var group = app.MapGroup("/stream").WithTags("Stream");
 
-        group.MapGet("", async (HttpContext context, StreamService stream) =>
+        // Project-scoped stream endpoint
+        group.MapGet("/{projectId:guid}", async (HttpContext context, Guid projectId, StreamService stream) =>
         {
             context.Response.Headers.Append("Content-Type", "text/event-stream");
             context.Response.Headers.Append("Cache-Control", "no-cache");
@@ -33,7 +34,7 @@ public static class EndpointExtensions
                 await response.Body.FlushAsync();
             }
 
-            var subId = stream.Subscribe(async (type, payload) =>
+            var subId = stream.Subscribe(projectId, async (type, payload) =>
             {
                 if (!cts.IsCancellationRequested)
                 {
@@ -55,6 +56,6 @@ public static class EndpointExtensions
             }
         });
 
-        return app;
+         return app;
     }
 }

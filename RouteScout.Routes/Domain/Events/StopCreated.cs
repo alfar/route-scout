@@ -1,3 +1,5 @@
+using RouteScout.Contracts;
+
 namespace RouteScout.Routes.Domain.Events;
 
 // Added AreaName to carry the area information for stops
@@ -13,4 +15,4 @@ public record StopCreated(
     Guid AreaId,
     string AreaName,
     double? Latitude,
-    double? Longitude);
+    double? Longitude) : IProjectEvent;

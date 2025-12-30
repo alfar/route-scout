@@ -20,13 +20,13 @@ public static class EndpointExtensions
         });
 
         // Update team metadata (not members)
-        group.MapPut("/{id:guid}", async (Guid id, UpdateTeam dto, ITeamService service, IQuerySession query, string? teamName) =>
+        group.MapPut("/{id:guid}", async (Guid id, Guid projectId, UpdateTeam dto, ITeamService service, IQuerySession query, string? teamName) =>
         {
             // Allow optional ?teamName= override, else keep existing
             var existing = await query.LoadAsync<TeamSummary>(id);
             if (existing is null) return Results.NotFound();
             var newName = string.IsNullOrWhiteSpace(teamName) ? existing.Name : teamName;
-            await service.UpdateTeam(id, newName, dto.TrailerSize, dto.LeaderName, dto.LeaderPhone);
+            await service.UpdateTeam(id, projectId, newName, dto.TrailerSize, dto.LeaderName, dto.LeaderPhone);
             return Results.NoContent();
         });
 

@@ -1,20 +1,33 @@
 import { useEffect, useMemo, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { EventSourceContext } from '../context/EventSourceContext';
 
 /**
- * `SseProvider` creates an `EventSource` for `/api/stream`, logs events,
+ * `SseProvider` creates an `EventSource` for `/api/stream/{projectId}`, logs events,
  * and provides it via context. Guards against double-mount in React Strict Mode.
  */
 export default function SseProvider({ children }: { children?: React.ReactNode }) {
+  const { projectId } = useParams<{ projectId: string }>();
   const esRef = useRef<EventSource | null>(null);
   const initializedRef = useRef(false);
+  const currentProjectIdRef = useRef<string | undefined>(undefined);
 
   const es = useMemo(() => {
-    if (!esRef.current) {
-      esRef.current = new EventSource('/api/stream', { withCredentials: false });
+    // If projectId changes, close the old connection and create a new one
+    if (currentProjectIdRef.current !== projectId) {
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+        initializedRef.current = false;
+      }
+      currentProjectIdRef.current = projectId;
+    }
+
+    if (!esRef.current && projectId) {
+      esRef.current = new EventSource(`/api/stream/${projectId}`, { withCredentials: false });
     }
     return esRef.current;
-  }, []);
+  }, [projectId]);
 
   useEffect(() => {
     if (!es) return;
@@ -52,6 +65,10 @@ export default function SseProvider({ children }: { children?: React.ReactNode }
       'TeamUpdated',
       'TeamMemberAdded',
       'TeamMemberRemoved',
+      'RouteExtraTreesAdded',
+      'RouteExtraTreesRemoved',
+      'RouteCutShort',
+      'StopReset',
     ];
 
     const handlers = new Map<string, EventListener>();

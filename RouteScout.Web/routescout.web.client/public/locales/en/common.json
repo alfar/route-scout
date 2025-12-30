@@ -11,6 +11,7 @@
   "openRoutesPage": "Open Routes Page",
   "shareQr": "Scan to open team routes",
   "home": "Home",
+  "projects": "Projects",
   "payments": "Payments",
   "addressWashing": "Address Washing",
   "routeManagement": "Route Management",
@@ -51,5 +52,17 @@
   "addressStateRejected": "Rejected",
   "addressStateGivenUp": "Given up",
   "import": "Import",
-  "importProgress": "Importing..."
+  "importProgress": "Importing...",
+  "projectsTitle": "Projects",
+  "projectsDescription": "Manage your RouteScout projects. Create new projects or select an existing one to work with.",
+  "projectName": "Project Name",
+  "createdAt": "Created At",
+  "open": "Open",
+  "noProjects": "No projects found. Create your first project to get started.",
+  "createNewProject": "Create New Project",
+  "enterProjectName": "Enter project name...",
+  "createProject": "Create Project",
+  "creating": "Creating...",
+  "createProjectFailed": "Failed to create project.",
+  "allProjects": "All Projects"
 }

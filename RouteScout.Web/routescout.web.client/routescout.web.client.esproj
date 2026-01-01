@@ -8,13 +8,8 @@
     <!-- Folder where production build objects will be placed -->
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
     <TargetFramework>net10.0</TargetFramework>
-    <StartupCommand>npm run dev</StartupCommand>
+    <BuildCommand>npm run build</BuildCommand>
+    <CleanCommand>
+    </CleanCommand>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="public\locales\NewFolder\**" />
-    <TypeScriptConfiguration Remove="public\locales\NewFolder\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="src\features\teams\pages\" />
-  </ItemGroup>
 </Project>

@@ -8,7 +8,6 @@ import { TeamSummary } from '../../teams/types/TeamSummary';
 import DroppableContainer from '../components/DroppableContainer';
 import DraggableCapacityIcon from '../components/DraggableCapacityIcon';
 import { TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
-import { getTrailerCapacity } from '../functions/TrailerFunctions';
 import { useEventSource } from '../../stream/context/EventSourceContext';
 import TeamLabel from '../components/TeamLabel';
 import StopLabel from '../components/StopLabel';
@@ -16,6 +15,10 @@ import RouteLabel from '../components/RouteLabel';
 import Container from '../components/Container';
 import { useTranslation } from 'react-i18next';
 import CapacityIcon from '../components/CapacityIcon';
+import { useRouteEvents } from '../hooks/useRouteEvents';
+import { useStopEvents } from '../hooks/useStopEvents';
+import { useDragHandlers } from '../hooks/useDragHandlers';
+import { useDragState } from '../hooks/useDragState';
 
 export interface RouteStopDetail {
     stopId: string;
@@ -48,24 +51,8 @@ export interface StopSummary {
     deleted: boolean;
     status: "Pending" | "Completed" | "NotFound";
     areaId: string;
-    areaName?: string; // added client-side dto field for area naming
+    areaName?: string;
 }
-
-// Discriminated union for a single dragged item
-type TrailerKind = 'small' | 'large' | 'boogie';
-type DraggedItem =
-    | { type: 'stop'; stop: StopSummary }
-    | { type: 'route'; route: RouteSummary }
-    | { type: 'team'; team: TeamSummary }
-    | { type: 'capacity'; kind: TrailerKind; capacity: number };
-
-// General hovered item state
-type HoveredItem =
-    | { type: 'route'; routeId: string }
-    | { type: 'unassign-stop'; capacity: number }
-    | { type: 'team'; teamId: string }
-    | { type: 'unassign-route' }
-    | { type: 'trash-route' };
 
 const RouteManagementPage: React.FC = () => {
     const { projectId } = useParams<{ projectId: string }>();
@@ -74,11 +61,8 @@ const RouteManagementPage: React.FC = () => {
     const [teams, setTeams] = useState<TeamSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null);
-    const [hoveredItem, setHoveredItem] = useState<HoveredItem | null>(null);
 
     const { t } = useTranslation(['routes', 'common']);
-
     const es = useEventSource();
 
     // Prefer PointerSensor first, TouchSensor as fallback
@@ -118,426 +102,32 @@ const RouteManagementPage: React.FC = () => {
         fetchData();
     }, [projectId]);
 
-    // Listen for RouteCreated events from SSE and refresh routes
-    useEffect(() => {
-        if (!es) return;
-        const handleRouteCreated = (e: Event) => {
-            const data = (e as MessageEvent).data;
-            try {
-                const json = JSON.parse(data);
-                setRoutes(prev => [...prev, { id: json.routeId, name: json.name, deleted: false, stops: [], stopDetails: [], dropOffPoint: json.dropOffPoint, cutShort: false, extraTrees: 0, teamId: null, completed: false }]);
-            } catch {
-                console.log('[SSE] RouteCreated', data);
-            }
-        };
+    // Use custom hooks for event handling
+    useRouteEvents({ eventSource: es, setRoutes, setStops });
+    useStopEvents({ eventSource: es, setStops, setRoutes });
 
-        const handleRouteAssignedToTeam = (e: Event) => {
-            const data = (e as MessageEvent).data;
-            try {
-                const json = JSON.parse(data);
-                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, teamId: json.teamId } : r));
-            } catch {
-                console.log('[SSE] RouteAssignedToTeam', data);
-            }
-        }
+    // Use custom hook for drag state
+    const {
+        draggedItem,
+        hoveredItem,
+        setDraggedItem,
+        setHoveredItem,
+        handleDragStart,
+        handleDragOver,
+        handleDragCancel
+    } = useDragState({ routes, stops, teams });
 
-        const handleRouteUnassignedFromTeam = (e: Event) => {
-            const data = (e as MessageEvent).data;
-            try {
-                const json = JSON.parse(data);
-                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, teamId: null } : r));
-            } catch {
-                console.log('[SSE] RouteUnassignedFromTeam', data);
-            }
-        }
+    // Use custom hook for drag handlers
+    const { handleDragEnd } = useDragHandlers({
+        projectId,
+        routes,
+        stops,
+        teams,
+        setTeams
+    });
 
-        const handleRouteCompleted = (e: Event) => {
-            const data = (e as MessageEvent).data;
-            try {
-                const json = JSON.parse(data);
-                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, completed: true } : r));
-            } catch {
-                console.log('[SSE] RouteUnassignedFromTeam', data);
-            }
-        }
-
-        const handleRouteDeleted = (e: Event) => {
-            const data = (e as MessageEvent).data;
-            try {
-                const json = JSON.parse(data);
-                setStops(prev => prev.map(s => s.routeId === json.routeId ? { ...s, routeId: null, status: "Pending" } : s));
-                setRoutes(prev => prev.filter(r => r.id !== json.routeId));
-            } catch {
-                console.log('[SSE] RouteDeleted', data);
-            }
-        };
-
-        const handleRouteExtraTreesAdded = (e: Event) => {
-            const data = (e as MessageEvent).data;
-            try {
-                const json = JSON.parse(data);
-                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, extraTrees: (r.extraTrees ?? 0) + json.amount } : r));
-            } catch {
-                console.log('[SSE] RouteExtraTreesAdded', data);
-            }
-        };
-
-        const handleRouteExtraTreesRemoved = (e: Event) => {
-            const data = (e as MessageEvent).data;
-            try {
-                const json = JSON.parse(data);
-                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, extraTrees: (r.extraTrees ?? 0) - json.amount } : r));
-            } catch {
-                console.log('[SSE] RouteExtraTreesRemoved', data);
-            }
-        };
-
-        const handleRouteCutShort = (e: Event) => {
-            const data = (e as MessageEvent).data;
-            try {
-                const json = JSON.parse(data);
-                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, cutShort: true } : r));
-            } catch {
-                console.log('[SSE] RouteCutShort', data);
-            }
-        };
-
-        es.addEventListener('RouteCreated', handleRouteCreated);
-        es.addEventListener('RouteExtraTreesAdded', handleRouteExtraTreesAdded);
-        es.addEventListener('RouteExtraTreesRemoved', handleRouteExtraTreesRemoved);
-        es.addEventListener('RouteCutShort', handleRouteCutShort);
-        es.addEventListener('RouteCompleted', handleRouteCompleted);
-        es.addEventListener('RouteDeleted', handleRouteDeleted);
-        es.addEventListener('RouteAssignedToTeam', handleRouteAssignedToTeam);
-        es.addEventListener('RouteUnassignedFromTeam', handleRouteUnassignedFromTeam);
-
-        const handleStopAddedToRoute = (e: Event) => {
-            const data = (e as MessageEvent).data;
-            try {
-                const json = JSON.parse(data);
-                setStops(prev => prev.map(s => s.id === json.stopId ? { ...s, routeId: json.routeId } : s));
-                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, stops: [...r.stops, json.stopId] } : r));
-            } catch {
-                console.log('[SSE] StopAddedToRoute', data);
-            }
-        }
-        const handleStopRemovedFromRoute = (e: Event) => {
-            const data = (e as MessageEvent).data;
-            try {
-                const json = JSON.parse(data);
-                setStops(prev => prev.map(s => s.id === json.stopId ? { ...s, routeId: null, status: "Pending" } : s));
-                setRoutes(prev => prev.map(r => r.id === json.routeId ? { ...r, stops: r.stops.filter(s => s !== json.stopId) } : r));
-            } catch {
-                console.log('[SSE] StopRemovedFromRoute', data);
-            }
-        }
-        const handleStopStatusChange = (status: "Pending" | "Completed" | "NotFound") => (e: Event) => {
-            const data = (e as MessageEvent).data;
-            try {
-                const json = JSON.parse(data);
-                setStops(prev => prev.map(s => s.id === json.stopId ? { ...s, status: status } : s));
-            } catch {
-                console.log('[SSE] Stop' + status, data);
-            }
-        }
-
-        const handleStopCompleted = handleStopStatusChange("Completed")
-        const handleStopReset = handleStopStatusChange("Pending")
-        const handleStopNotFound = handleStopStatusChange("NotFound")
-
-        es.addEventListener('StopCompleted', handleStopCompleted);
-        es.addEventListener('StopReset', handleStopReset);
-        es.addEventListener('StopNotFound', handleStopNotFound);
-        es.addEventListener('StopAddedToRoute', handleStopAddedToRoute);
-        es.addEventListener('StopRemovedFromRoute', handleStopRemovedFromRoute);
-
-        return () => {
-            es.removeEventListener('RouteCreated', handleRouteCreated);
-            es.removeEventListener('RouteCompleted', handleRouteCompleted);
-            es.removeEventListener('RouteExtraTreesAdded', handleRouteExtraTreesAdded);
-            es.removeEventListener('RouteExtraTreesRemoved', handleRouteExtraTreesRemoved);
-            es.removeEventListener('RouteCutShort', handleRouteCutShort);
-            es.removeEventListener('RouteDeleted', handleRouteDeleted);
-            es.removeEventListener('RouteAssignedToTeam', handleRouteAssignedToTeam);
-            es.removeEventListener('RouteUnassignedFromTeam', handleRouteUnassignedFromTeam);
-
-            es.removeEventListener('StopCompleted', handleStopCompleted);
-            es.removeEventListener('StopReset', handleStopReset);
-            es.removeEventListener('StopNotFound', handleStopNotFound);
-            es.removeEventListener('StopAddedToRoute', handleStopAddedToRoute);
-            es.removeEventListener('StopRemovedFromRoute', handleStopRemovedFromRoute);
-        };
-    }, [es]);
-
-    const handleAssignStop = async (stopId: string, routeId: string) => {
-        await fetch(`/api/projects/${projectId}/routes/${routeId}/stops/${stopId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ position: 0 })
-        });
-    };
-
-    const handleUnassignStop = async (stopId: string) => {
-        await fetch(`/api/projects/${projectId}/stops/${stopId}/unassign`, { method: 'POST' });
-    };
-
-    const handleAssignRouteToTeam = async (routeId: string, teamId: string) => {
-        await fetch(`/api/projects/${projectId}/routes/${routeId}/assign-team/${teamId}`, { method: 'POST' });
-    };
-
-    const handleUnassignRouteFromTeam = async (routeId: string) => {
-        await fetch(`/api/projects/${projectId}/routes/${routeId}/unassign-team`, { method: 'POST' });
-    };
-
-    const handleDeleteRoute = async (routeId: string) => {
-        await fetch(`/api/projects/${projectId}/routes/${routeId}`, { method: 'DELETE' });
-    };
-
-    const handleCompleteRoute = async (routeId: string) => {
-        await fetch(`/api/projects/${projectId}/routes/${routeId}/completed`, { method: 'POST' });
-    };
-
-    const createTeamWithTrailerSize = async (kind: TrailerKind) => {
-        await fetch(`/api/projects/${projectId}/teams`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ trailerSize: kind, leaderName: "Ukendt", leaderPhone: "" })
-        });
-        // refresh team list
-        const res = await fetch(`/api/projects/${projectId}/teams`);
-        const data = await res.json();
-        setTeams(data);
-    };
-
-    const handleDragStart = (event: any) => {
-        const [_, type, id] = (event.active?.id as string ?? '').split('/', 3);
-
-        switch (type) {
-            case 'route': {
-                const route = routes.find(r => r.id === id);
-                if (route) setDraggedItem({ type: 'route', route });
-                break;
-            }
-            case 'team': {
-                const team = teams.find(t => t.id === id);
-                if (team) setDraggedItem({ type: 'team', team });
-                break;
-            }
-            case 'capacity': {
-                const kind = id as TrailerKind;
-                const capacity = getTrailerCapacity(kind);
-                setDraggedItem({ type: 'capacity', kind, capacity });
-                break;
-            }
-            case 'stop': {
-                const stop = stops.find(s => s.id === id);
-                if (stop) setDraggedItem({ type: 'stop', stop });
-                break;
-            }
-        }
-    };
-
-    const handleDragOver = (event: any) => {
-        const { active, over } = event;
-        if (!active || !over) {
-            setHoveredItem(null);
-            return;
-        }
-        const [overType, overId] = (over.id as string).split('/', 2);
-
-        // Build a hovered item from the droppable target
-        switch (overType) {
-            case 'route':
-                setHoveredItem({ type: 'route', routeId: overId });
-                break;
-            case 'team':
-                setHoveredItem({ type: 'team', teamId: overId });
-                break;
-            case 'unassign':
-                if (overId === 'stop') {
-                    const capacity = draggedItem?.type === 'team'
-                        ? getTrailerCapacity(draggedItem.team.trailerSize)
-                        : draggedItem?.type === 'capacity'
-                            ? draggedItem.capacity
-                            : 0;
-                    setHoveredItem({ type: 'unassign-stop', capacity });
-                } else if (overId === 'route') {
-                    setHoveredItem({ type: 'unassign-route' });
-                } else {
-                    setHoveredItem(null);
-                }
-                break;
-            case 'trash':
-                if (overId === 'route') setHoveredItem({ type: 'trash-route' });
-                else setHoveredItem(null);
-                break;
-            default:
-                setHoveredItem(null);
-                break;
-        }
-    };
-
-    // Select stops based on tree capacity (sum of amounts <= capacity)
-    const selectStopsByTreeCapacity = (capacity: number) => {
-        const candidate = stops.filter(s => !s.routeId && !s.deleted && s.status === 'Pending');
-        const selected: StopSummary[] = [];
-        let sum = 0;
-        let areaId: string | null = null;
-
-        for (const s of candidate) {
-            if (areaId === null) areaId = s.areaId;
-            if (areaId !== s.areaId) break;
-
-            const amt = s.amount || 0;
-            if (sum + amt <= capacity) {
-                selected.push(s);
-                sum += amt;
-            } else {
-                break;
-            }
-        }
-        return selected;
-    };
-
-    const createRouteFromUnassignedCapacity = async (capacity: number) => {
-        const selected = selectStopsByTreeCapacity(capacity);
-        if (selected.length === 0) return;
-        const createRes = await fetch(`/api/projects/${projectId}/routes`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ areaId: selected[0].areaId, areaName: selected[0].areaName, dropOffPoint: 'Almindsøhytten' })
-        });
-        const routeId = await createRes.json();
-        if (!routeId) return;
-        for (const stop of selected) {
-            await handleAssignStop(stop.id, routeId);
-        }
-    };
-
-    const createRouteForTeamFromUnassigned = async (team: TeamSummary, capacity: number) => {
-        const selected = selectStopsByTreeCapacity(capacity);
-        if (selected.length === 0) return;
-
-        const createRes = await fetch(`/api/projects/${projectId}/routes`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ areaId: selected[0].areaId, areaName: selected[0].areaName, dropOffPoint: 'Almindsøhytten' })
-        });
-        const routeId = await createRes.json();
-        if (!routeId) return;
-
-        for (const stop of selected) {
-            await handleAssignStop(stop.id, routeId);
-        }
-
-        await handleAssignRouteToTeam(routeId, team.id);
-    };
-
-    const handleDragEnd = async (event: any) => {
-        const { active, over } = event;
-        setDraggedItem(null);
-        setHoveredItem(null);
-        if (!active || !over) return;
-
-        const [overType, overId] = (over.id as string).split('/', 2);
-        const [_, activeType, activeId] = (active.id as string).split('/', 3);
-
-        switch (activeType) {
-            case 'capacity': {
-                const kind = activeId as TrailerKind;
-                const capacity = getTrailerCapacity(kind);
-                if (overType === 'team' && overId === 'new') {
-                    await createTeamWithTrailerSize(kind);
-                } else {
-                    await createRouteFromUnassignedCapacity(capacity);
-                }
-                break;
-            }
-            case 'team': {
-                if (overType === 'unassign' && overId === 'stop') {
-                    const team = teams.find(t => t.id === activeId);
-                    if (team) {
-                        const capacity = getTrailerCapacity(team.trailerSize);
-                        await createRouteForTeamFromUnassigned(team, capacity);
-                    }
-                } else if (overType === 'route') {
-                    const team = teams.find(t => t.id === activeId);
-                    const route = routes.find(r => r.id === overId);
-                    if (team && route) {
-                        const capacity = getTrailerCapacity(team.trailerSize);
-                        const routeStops = stops.filter(s => s.routeId === route.id);
-                        const incompleteStops = routeStops.filter(s => s.status !== 'Completed');
-                        const totalIncomplete = incompleteStops.reduce((sum, s) => sum + (s.amount || 0), 0);
-                        const noneCompleted = routeStops.every(s => s.status !== 'Completed');
-
-                        if (noneCompleted && totalIncomplete <= capacity) {
-                            // Option 1: assign the whole route to the team
-                            await handleAssignRouteToTeam(route.id, team.id);
-                        } else {
-                            // Option 2: create a new route with incomplete stops up to capacity and assign to team
-                            let cumulative = 0;
-                            const selected: StopSummary[] = [];
-                            for (const s of incompleteStops) {
-                                const amt = s.amount || 0;
-                                if (cumulative + amt <= capacity) {
-                                    selected.push(s);
-                                    cumulative += amt;
-                                } else {
-                                    break;
-                                }
-                            }
-                            const base = selected[0];
-                            if (base && selected.length > 0) {
-                                const createRes = await fetch(`/api/projects/${projectId}/routes`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ areaId: base.areaId, areaName: base.areaName, dropOffPoint: route.dropOffPoint })
-                                });
-                                const newRouteId = await createRes.json();
-                                if (newRouteId) {
-                                    for (const stop of selected) {
-                                        await handleAssignStop(stop.id, newRouteId);
-                                    }
-                                    await handleAssignRouteToTeam(newRouteId, team.id);
-                                }
-                            }
-                        }
-                    }
-                }
-                break;
-            }
-            case 'route': {
-                if (overType === 'team') {
-                    await handleAssignRouteToTeam(activeId, overId);
-                } else if (overType === 'unassign' && overId === 'route') {
-                    await handleUnassignRouteFromTeam(activeId);
-                } else if (overType === 'trash' && overId === 'route') {
-                    await handleDeleteRoute(activeId);
-                } else if (overType === 'complete' && overId === 'route') {
-                    await handleCompleteRoute(activeId);
-                } else {
-                    return;
-                }
-                break;
-            }
-            case 'stop': {
-                if (overType === 'route') {
-                    await handleAssignStop(activeId, overId);
-                } else if (overType === 'unassign' && overId === 'stop') {
-                    await handleUnassignStop(activeId);
-                } else {
-                    return;
-                }
-                break;
-            }
-            default:
-                return;
-        }
-
-        //fetchData();
-    };
-
-    const handleDragCancel = () => {
+    const onDragEnd = async (event: any) => {
+        await handleDragEnd(event);
         setDraggedItem(null);
         setHoveredItem(null);
     };
@@ -553,7 +143,7 @@ const RouteManagementPage: React.FC = () => {
     const completedTrees = stops.filter(s => !s.deleted && s.status === 'Completed').reduce((sum, s) => sum + (s.amount || 0), 0);
 
     return (
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={onDragEnd} onDragCancel={handleDragCancel}>
             <div className="p-3 lg:p-4 overscroll-contain">
                 <h1 className="text-2xl font-bold mb-1">{t('dispatchTitle')}</h1>
                 <div className="text-sm text-gray-700 mb-3">{completedTrees} / {t('treesLabel', { count: totalTrees })}</div>
@@ -619,9 +209,8 @@ const RouteManagementPage: React.FC = () => {
                             </DroppableContainer>
                         </div>
                     </div>
-                )
-                }
-            </div >
+                )}
+            </div>
             <DragOverlay>
                 {draggedItem?.type === 'stop' && (
                     <div className="p-4 border border-gray-600 rounded bg-white min-w-2xs">
@@ -644,8 +233,7 @@ const RouteManagementPage: React.FC = () => {
                     </div>
                 )}
             </DragOverlay>
-        </DndContext >
-
+        </DndContext>
     );
 };
 

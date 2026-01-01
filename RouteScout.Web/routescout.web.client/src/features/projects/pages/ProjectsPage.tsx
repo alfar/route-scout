@@ -4,6 +4,7 @@ import { ProjectsList } from '../components/ProjectsList';
 import { CreateProjectForm } from '../components/CreateProjectForm';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import UserMenu from '../../../components/UserMenu';
 
 function ProjectsPage() {
     const [projects, setProjects] = useState<Project[]>();
@@ -15,7 +16,15 @@ function ProjectsPage() {
 
     const loadProjects = async () => {
         try {
-            const response = await fetch('/api/projects');
+            const response = await fetch('/api/projects', {
+                credentials: 'include'
+            });
+            
+            if (response.status === 401) {
+                window.location.href = '/login';
+                return;
+            }
+            
             const data = await response.json();
             setProjects(data);
         } catch (error) {
@@ -25,9 +34,11 @@ function ProjectsPage() {
 
     return (
         <div className="app">
-            <nav className="bg-blue-600 p-4 flex gap-4 flex-wrap">
-                <Link className="text-white font-semibold hover:underline" to="/">{t('home')}</Link>
-                <Link className="text-white font-semibold hover:underline" to="/about">{t('about')}</Link>
+            <nav className="bg-blue-600 p-4 flex gap-4 flex-wrap items-center justify-between">
+                <div className="flex gap-4">
+                    <Link className="text-white font-semibold hover:underline" to="/">{t('home')}</Link>
+                </div>
+                <UserMenu />
             </nav>
             <div className="flex flex-col gap-3 p-3">
                 <div>

@@ -14,6 +14,15 @@ using RouteScout.StreetCatalog.Services;
 using RouteScout.Teams.Extensions;
 using RouteScout.Web.Server.Integration.AddressWashing;
 using RouteScout.Web.Server.Integration.Payments;
+using RouteScout.Web.Server.Authentication;
+using RouteScout.Web.Server.Authorization;
+using RouteScout.Web.Server.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using RouteScout.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +50,111 @@ builder.Services.AddHttpsRedirection(options =>
         options.HttpsPort = 443;
     }
 });
+
+// Add CORS to allow Vite dev server
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("https://localhost:5173")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
+// Add Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+})
+.AddCookie(options =>
+{
+    options.LoginPath = "/auth/login/google";
+    options.LogoutPath = "/auth/logout";
+    options.Cookie.SameSite = SameSiteMode.None; // Changed from Lax to None for CORS
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Events = new CookieAuthenticationEvents
+    {
+        OnSigningIn = async context =>
+        {
+            // Store user ID as a Guid claim
+            var claimsIdentity = (ClaimsIdentity)context.Principal!.Identity!;
+            var nameIdentifierClaim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+            
+            if (nameIdentifierClaim != null)
+            {
+                // Create a deterministic Guid from the Google user ID
+                var googleId = nameIdentifierClaim.Value;
+                var userId = GenerateGuidFromString(googleId);
+                
+                // Replace the NameIdentifier claim with our Guid
+                claimsIdentity.RemoveClaim(nameIdentifierClaim);
+                claimsIdentity.AddClaim(new Claim(ClaimTypes.NameIdentifier, userId.ToString()));
+            }
+            
+            await Task.CompletedTask;
+        }
+    };
+})
+.AddGoogle(options =>
+{
+    options.ClientId = builder.Configuration["Authentication:Google:ClientId"] 
+        ?? throw new InvalidOperationException("Google ClientId not configured");
+    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]
+        ?? throw new InvalidOperationException("Google ClientSecret not configured");
+    options.SaveTokens = true;
+    options.Scope.Add("profile");
+    options.Scope.Add("email");
+    
+    options.ClaimActions.MapJsonKey("picture", "picture");
+    
+    // Explicitly set the callback path
+    options.CallbackPath = "/signin-google";
+    
+    // Configure events to handle redirects properly
+    options.Events.OnRedirectToAuthorizationEndpoint = context =>
+    {
+        // Ensure the redirect_uri parameter uses the backend URL
+        var redirectUri = context.RedirectUri;
+        
+        // If running behind a proxy (Vite), make sure we use the backend URL
+        if (!string.IsNullOrEmpty(context.Request.Headers["X-Forwarded-Host"]))
+        {
+            var scheme = context.Request.Scheme;
+            var host = context.Request.Host.Value;
+            
+            // Force the backend host/port
+            if (host.Contains("5173")) // Vite dev server
+            {
+                host = "localhost:7258";
+                scheme = "https";
+            }
+            
+            var callbackPath = options.CallbackPath;
+            var newRedirectUri = $"{scheme}://{host}{callbackPath}";
+            
+            // Replace the redirect_uri in the authorization URL
+            redirectUri = redirectUri.Replace(
+                Uri.EscapeDataString($"https://localhost:5173{callbackPath}"),
+                Uri.EscapeDataString(newRedirectUri)
+            );
+        }
+        
+        context.Response.Redirect(redirectUri);
+        return Task.CompletedTask;
+    };
+});
+
+// Add Authorization
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("ProjectOwner", policy =>
+        policy.Requirements.Add(new ProjectOwnerRequirement()));
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IAuthorizationHandler, ProjectOwnerAuthorizationHandler>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // Add services to the container.
 builder.Services.AddAddressWashing();
@@ -81,8 +195,6 @@ builder.Services.AddMarten(opts =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddAuthorization();
-
 var app = builder.Build();
 
 
@@ -99,10 +211,18 @@ if (app.Environment.IsDevelopment())
 app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 
+// CORS must come before Authentication
+app.UseCors();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
-// Nest all API endpoints under /api/projects/{projectId:guid}
+// Authentication endpoints
+app.MapAuthenticationEndpoints();
+
+// Nest all API endpoints under /api/projects/{projectId:guid} with ProjectOwner authorization
 app.MapGroup("/api/projects/{projectId:guid}")
+    .RequireAuthorization("ProjectOwner")
     .MapAddressWashingEndpoints()
     .MapPaymentEndpoints()
     .MapRouteEndpoints()
@@ -115,6 +235,19 @@ app.MapGroup("/api")
     .MapStreetCatalogEndpoints()
     .MapStreamEndpoints();
 
+// Anonymous team endpoints (no projectId, no auth required)
+app.MapGroup("/api/teams")
+    .MapAnonymousTeamEndpoints()
+    .MapAnonymousRouteEndpoints();
+
 app.MapFallbackToFile("/index.html");
 
 app.Run();
+
+// Helper method to generate deterministic Guid from string
+static Guid GenerateGuidFromString(string input)
+{
+    using var md5 = System.Security.Cryptography.MD5.Create();
+    var hash = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input));
+    return new Guid(hash);
+}

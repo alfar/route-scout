@@ -25,10 +25,10 @@ export function TeamInfoPage({ team, teamId, onUpdated }: Props) {
     async function save() {
         setSaving(true);
         try {
-            const res = await fetch(`/api/teams/${teamId}?teamName=${encodeURIComponent(name)}`, {
+            const res = await fetch(`/api/teams/${teamId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ trailerSize, leaderName, leaderPhone })
+                body: JSON.stringify({ name, trailerSize, leaderName, leaderPhone })
             });
             if (res.ok) {
                 await onUpdated();
@@ -41,7 +41,11 @@ export function TeamInfoPage({ team, teamId, onUpdated }: Props) {
     async function addMember() {
         const member = memberToAdd.trim();
         if (!member) return;
-        const res = await fetch(`/api/teams/${teamId}/members?member=${encodeURIComponent(member)}`, { method: 'POST' });
+        const res = await fetch(`/api/teams/${teamId}/members`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ member })
+        });
         if (res.ok) {
             setMembers(m => [...m, member]);
             setMemberToAdd('');

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -7,10 +7,12 @@
     <SpaRoot>..\routescout.web.client</SpaRoot>
     <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>https://localhost:5173</SpaProxyServerUrl>
+    <UserSecretsId>1ddafdb6-bf63-47e5-adf9-ebb052fb600a</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Marten" Version="8.17.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy">
       <Version>10.0.0</Version>
     </PackageReference>
@@ -20,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\RouteScout.AddressWashing\RouteScout.AddressWashing.csproj" />
+    <ProjectReference Include="..\..\RouteScout.Contracts\RouteScout.Contracts.csproj" />
     <ProjectReference Include="..\..\RouteScout.Payments\RouteScout.Payments.csproj" />
     <ProjectReference Include="..\..\RouteScout.Projects\RouteScout.Projects.csproj" />
     <ProjectReference Include="..\..\RouteScout.Routes\RouteScout.Routes.csproj" />
@@ -33,7 +36,6 @@
 
   <ItemGroup>
     <Folder Include="Integration\Routes\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

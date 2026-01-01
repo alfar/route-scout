@@ -21,8 +21,8 @@ export function TeamRoutesPage({ teamId }: Props) {
         setLoading(true);
         try {
             const [routesRes, stopsRes] = await Promise.all([
-                fetch(`/api/routes/team/${teamId}`),
-                fetch('/api/stops')
+                fetch(`/api/teams/${teamId}/routes`),
+                fetch(`/api/teams/${teamId}/stops`)
             ]);
             if (!routesRes.ok) {
                 setError(t('error', { ns: 'common' }));
@@ -47,33 +47,33 @@ export function TeamRoutesPage({ teamId }: Props) {
 
     useEffect(() => { load(); }, [teamId]);
 
-    async function completeStop(id: string) {
-        await fetch(`/api/stops/${id}/complete`, { method: 'POST' });
+    async function completeStop(stopId: string) {
+        await fetch(`/api/teams/${teamId}/stops/${stopId}/complete`, { method: 'POST' });
         await load();
     }
 
-    async function notFoundStop(id: string) {
-        await fetch(`/api/stops/${id}/not-found`, { method: 'POST' });
+    async function notFoundStop(stopId: string) {
+        await fetch(`/api/teams/${teamId}/stops/${stopId}/not-found`, { method: 'POST' });
         await load();
     }
 
-    async function resetStop(id: string) {
-        await fetch(`/api/stops/${id}/reset`, { method: 'POST' });
+    async function resetStop(stopId: string) {
+        await fetch(`/api/teams/${teamId}/stops/${stopId}/reset`, { method: 'POST' });
         await load();
     }
 
     async function addExtraTrees(routeId: string, amount: number) {
-        await fetch(`/api/routes/${routeId}/extra-trees/add/${amount}`, { method: 'POST' });
+        await fetch(`/api/teams/${teamId}/routes/${routeId}/extra-trees/add/${amount}`, { method: 'POST' });
         await load();
     }
 
     async function removeExtraTrees(routeId: string, amount: number) {
-        await fetch(`/api/routes/${routeId}/extra-trees/remove/${amount}`, { method: 'POST' });
+        await fetch(`/api/teams/${teamId}/routes/${routeId}/extra-trees/remove/${amount}`, { method: 'POST' });
         await load();
     }
 
     async function cutShort(route: RouteSummary) {
-        await fetch(`/api/routes/${route.id}/cut-short`, { method: 'POST' });
+        await fetch(`/api/teams/${teamId}/routes/${route.id}/cut-short`, { method: 'POST' });
         await load();
     }
 
@@ -91,7 +91,7 @@ export function TeamRoutesPage({ teamId }: Props) {
             {error && <div className="text-red-600">{error}</div>}
             {!loading && !error && routes.length === 0 && <div className="text-gray-600">{t('noRoutes', { ns: 'common' })}</div>}
             {!loading && !error && routes.map(route => {
-                const routeStops = route.stops.map(id => stops.find(s => s.id === id)).filter(Boolean) as StopSummary[];
+                const routeStops = stops.filter(s => s.routeId === route.id);
                 const extraCount = route.extraTrees ?? 0;
                 return (
                     <section key={route.id} className="bg-white rounded border border-gray-600 p-3">
@@ -129,9 +129,9 @@ export function TeamRoutesPage({ teamId }: Props) {
 
                         <div className="mt-3 flex items-center justify-between gap-2">
                             <button onClick={() => removeExtraTrees(route.id, 1)} disabled={extraCount < 1} className="px-5 py-2 text-xs rounded border border-blue-600 text-blue-600 disabled:opacity-40">{t('minus', { ns: 'routes' })}</button>
-                            <span className="text-gray-700">{t('extraTrees', { ns: 'routes', count: extraCount })}</span>
+                                <span className="text-gray-700">{t('extraTrees', { ns: 'routes', count: extraCount })}</span>
                             <button onClick={() => addExtraTrees(route.id, 1)} className="px-5 py-2 text-xs rounded border border-blue-600 text-blue-600">{t('plus', { ns: 'routes' })}</button>
-                        </div>
+                            </div>
 
                         {!route.cutShort && (
                             <div className="mt-2">

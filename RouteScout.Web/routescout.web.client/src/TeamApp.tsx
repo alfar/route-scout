@@ -18,7 +18,9 @@ export function TeamApp() {
         if (!teamId) return;
         setLoading(true);
         try {
+            // Use anonymous endpoint - no credentials needed
             const res = await fetch(`/api/teams/${teamId}`);
+            
             if (!res.ok) {
                 setError('Team not found');
                 setTeam(null);
@@ -40,7 +42,7 @@ export function TeamApp() {
 
     return (
         <div className="min-h-screen flex flex-col">
-            <header className="sticky top-0 bg-white z-10 p-3">
+            <header className="sticky top-0 bg-white z-10 p-3 border-b border-gray-200">
                 <nav>
                     <div className="flex gap-2">
                         <Link

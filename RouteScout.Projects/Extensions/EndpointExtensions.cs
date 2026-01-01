@@ -1,4 +1,6 @@
 using Marten;
+using Microsoft.AspNetCore.Authorization;
+using RouteScout.Contracts;
 using RouteScout.Projects.Domain;
 using RouteScout.Projects.Dto;
 using RouteScout.Projects.Projections;
@@ -12,13 +14,27 @@ public static class EndpointExtensions
         var group = app.MapGroup("/projects").WithTags("Projects");
 
         // Create a new project
-        group.MapPost("/", async (IDocumentSession session, CreateProject dto) =>
+        group.MapPost("/", [Authorize] async (
+            IDocumentSession session, 
+            ICurrentUserService currentUserService,
+            CreateProject dto) =>
         {
             if (string.IsNullOrWhiteSpace(dto.Name))
                 return Results.BadRequest("Project name is required");
 
+            var userId = currentUserService.GetUserId();
+            if (userId == null)
+                return Results.Unauthorized();
+
             var projectId = Guid.NewGuid();
-            var ownerIds = dto.OwnerIds ?? new List<Guid>();
+            
+            // Add current user as owner automatically
+            var ownerIds = new List<Guid> { userId.Value };
+            if (dto.OwnerIds != null)
+            {
+                // Add any additional owners from the DTO
+                ownerIds.AddRange(dto.OwnerIds.Where(id => id != userId.Value));
+            }
             
             var events = Project.Create(projectId, dto.Name.Trim(), ownerIds);
             session.Events.StartStream<Project>(projectId, events.ToArray());
@@ -27,25 +43,63 @@ public static class EndpointExtensions
             return Results.Created($"/api/projects/{projectId}", new { id = projectId, name = dto.Name });
         });
 
-        // Get all projects
-        group.MapGet("/", async (IQuerySession session) =>
+        // Get all projects - only show projects owned by current user
+        group.MapGet("/", [Authorize] async (
+            IQuerySession session,
+            ICurrentUserService currentUserService) =>
         {
-            var projects = await session.Query<ProjectSummary>().ToListAsync();
+            var userId = currentUserService.GetUserId();
+            if (userId == null)
+                return Results.Unauthorized();
+
+            var projects = await session.Query<ProjectSummary>()
+                .Where(p => p.OwnerIds.Contains(userId.Value))
+                .ToListAsync();
+            
             return Results.Ok(projects);
         });
 
         // Get a specific project by ID
-        group.MapGet("/{id:guid}", async (IQuerySession session, Guid id) =>
+        group.MapGet("/{id:guid}", [Authorize] async (
+            IQuerySession session,
+            ICurrentUserService currentUserService,
+            Guid id) =>
         {
+            var userId = currentUserService.GetUserId();
+            if (userId == null)
+                return Results.Unauthorized();
+
             var project = await session.LoadAsync<ProjectSummary>(id);
-            return project is not null ? Results.Ok(project) : Results.NotFound();
+            
+            if (project is null)
+                return Results.NotFound();
+            
+            if (!project.OwnerIds.Contains(userId.Value))
+                return Results.Forbid();
+
+            return Results.Ok(project);
         });
 
         // Rename a project
-        group.MapPatch("/{id:guid}/name", async (IDocumentSession session, Guid id, RenameProject dto) =>
+        group.MapPatch("/{id:guid}/name", [Authorize] async (
+            IDocumentSession session,
+            ICurrentUserService currentUserService,
+            Guid id,
+            RenameProject dto) =>
         {
             if (string.IsNullOrWhiteSpace(dto.NewName))
                 return Results.BadRequest("New name is required");
+
+            var userId = currentUserService.GetUserId();
+            if (userId == null)
+                return Results.Unauthorized();
+
+            var projectSummary = await session.LoadAsync<ProjectSummary>(id);
+            if (projectSummary is null)
+                return Results.NotFound("Project not found");
+
+            if (!projectSummary.OwnerIds.Contains(userId.Value))
+                return Results.Forbid();
 
             var project = await session.Events.AggregateStreamAsync<Project>(id);
             if (project is null)
@@ -59,8 +113,23 @@ public static class EndpointExtensions
         });
 
         // Add an owner to a project
-        group.MapPost("/{id:guid}/owners/{ownerId:guid}", async (IDocumentSession session, Guid id, Guid ownerId) =>
+        group.MapPost("/{id:guid}/owners/{ownerId:guid}", [Authorize] async (
+            IDocumentSession session,
+            ICurrentUserService currentUserService,
+            Guid id,
+            Guid ownerId) =>
         {
+            var userId = currentUserService.GetUserId();
+            if (userId == null)
+                return Results.Unauthorized();
+
+            var projectSummary = await session.LoadAsync<ProjectSummary>(id);
+            if (projectSummary is null)
+                return Results.NotFound("Project not found");
+
+            if (!projectSummary.OwnerIds.Contains(userId.Value))
+                return Results.Forbid();
+
             var project = await session.Events.AggregateStreamAsync<Project>(id);
             if (project is null)
                 return Results.NotFound("Project not found");
@@ -73,8 +142,23 @@ public static class EndpointExtensions
         });
 
         // Remove an owner from a project
-        group.MapDelete("/{id:guid}/owners/{ownerId:guid}", async (IDocumentSession session, Guid id, Guid ownerId) =>
+        group.MapDelete("/{id:guid}/owners/{ownerId:guid}", [Authorize] async (
+            IDocumentSession session,
+            ICurrentUserService currentUserService,
+            Guid id,
+            Guid ownerId) =>
         {
+            var userId = currentUserService.GetUserId();
+            if (userId == null)
+                return Results.Unauthorized();
+
+            var projectSummary = await session.LoadAsync<ProjectSummary>(id);
+            if (projectSummary is null)
+                return Results.NotFound("Project not found");
+
+            if (!projectSummary.OwnerIds.Contains(userId.Value))
+                return Results.Forbid();
+
             var project = await session.Events.AggregateStreamAsync<Project>(id);
             if (project is null)
                 return Results.NotFound("Project not found");

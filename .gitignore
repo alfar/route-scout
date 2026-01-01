@@ -310,3 +310,7 @@ ASALocalRun/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Authentication secrets - DO NOT COMMIT
+# Use User Secrets or environment variables instead
+appsettings.Development.json

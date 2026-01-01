@@ -126,7 +126,7 @@ builder.Services.AddAuthentication(options =>
             var host = context.Request.Host.Value;
             
             // Force the backend host/port
-            if (host.Contains("5173")) // Vite dev server
+            if (host?.Contains("5173") ?? false) // Vite dev server
             {
                 host = "localhost:7258";
                 scheme = "https";

@@ -28,7 +28,7 @@ public static class AnonymousRouteEndpoints
                 .ToListAsync();
 
             var stops = await session.Query<StopSummary>()
-                .Where(s => teamRoutes.Contains(s.RouteId.Value) && !s.Deleted)
+                .Where(s => teamRoutes.Contains(s.RouteId!.Value) && !s.Deleted)
                 .OrderBy(s => s.SortOrder)
                 .ToListAsync();
 

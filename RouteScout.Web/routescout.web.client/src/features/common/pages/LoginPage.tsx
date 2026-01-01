@@ -1,15 +1,17 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const LoginPage: React.FC = () => {
     const { login } = useAuth();
+    const { t } = useTranslation(['common']);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-                <h1 className="text-3xl font-bold mb-6 text-center">RouteScout</h1>
+                <h1 className="text-3xl font-bold mb-6 text-center">{t('loginTitle')}</h1>
                 <p className="text-gray-600 mb-8 text-center">
-                    Sign in to manage your delivery routes
+                    {t('loginSubtitle')}
                 </p>
                 <button
                     onClick={login}
@@ -33,7 +35,7 @@ const LoginPage: React.FC = () => {
                             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                         />
                     </svg>
-                    Sign in with Google
+                    {t('loginSignInButton')}
                 </button>
             </div>
         </div>

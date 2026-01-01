@@ -19,7 +19,7 @@ const LandingPage: React.FC = () => {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="text-lg">Loading...</div>
+                <div className="text-lg">{t('loading')}</div>
             </div>
         );
     }
@@ -30,10 +30,10 @@ const LandingPage: React.FC = () => {
             <div className="container mx-auto px-4 py-16">
                 <div className="text-center mb-16">
                     <h1 className="text-5xl font-bold text-gray-900 mb-4">
-                        RouteScout
+                        {t('landingTitle')}
                     </h1>
                     <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                        Smart route planning and dispatch management for your delivery operations
+                        {t('landingSubtitle')}
                     </p>
 
                     {!user && (
@@ -59,7 +59,7 @@ const LandingPage: React.FC = () => {
                                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                                 />
                             </svg>
-                            Sign in with Google to Get Started
+                            {t('landingSignInButton')}
                         </button>
                     )}
                 </div>
@@ -70,9 +70,9 @@ const LandingPage: React.FC = () => {
                         <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
                             <MapIcon className="w-6 h-6 text-blue-600" />
                         </div>
-                        <h3 className="text-lg font-semibold mb-2">Smart Route Planning</h3>
+                        <h3 className="text-lg font-semibold mb-2">{t('landingFeatureSmartRoutePlanning')}</h3>
                         <p className="text-gray-600">
-                            Automatically organize stops into efficient routes based on location and capacity
+                            {t('landingFeatureSmartRoutePlanningDesc')}
                         </p>
                     </div>
 
@@ -80,9 +80,9 @@ const LandingPage: React.FC = () => {
                         <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
                             <TruckIcon className="w-6 h-6 text-green-600" />
                         </div>
-                        <h3 className="text-lg font-semibold mb-2">Trailer Management</h3>
+                        <h3 className="text-lg font-semibold mb-2">{t('landingFeatureTrailerManagement')}</h3>
                         <p className="text-gray-600">
-                            Manage different trailer sizes and optimize load capacity for each route
+                            {t('landingFeatureTrailerManagementDesc')}
                         </p>
                     </div>
 
@@ -90,9 +90,9 @@ const LandingPage: React.FC = () => {
                         <div className="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
                             <UsersIcon className="w-6 h-6 text-purple-600" />
                         </div>
-                        <h3 className="text-lg font-semibold mb-2">Team Coordination</h3>
+                        <h3 className="text-lg font-semibold mb-2">{t('landingFeatureTeamCoordination')}</h3>
                         <p className="text-gray-600">
-                            Assign routes to teams and track progress in real-time
+                            {t('landingFeatureTeamCoordinationDesc')}
                         </p>
                     </div>
 
@@ -100,42 +100,42 @@ const LandingPage: React.FC = () => {
                         <div className="bg-yellow-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
                             <CheckCircleIcon className="w-6 h-6 text-yellow-600" />
                         </div>
-                        <h3 className="text-lg font-semibold mb-2">Live Tracking</h3>
+                        <h3 className="text-lg font-semibold mb-2">{t('landingFeatureLiveTracking')}</h3>
                         <p className="text-gray-600">
-                            Monitor deliveries and update stop statuses as work progresses
+                            {t('landingFeatureLiveTrackingDesc')}
                         </p>
                     </div>
                 </div>
 
                 {/* How It Works Section */}
                 <div className="bg-white rounded-lg shadow-md p-8 mb-16">
-                    <h2 className="text-3xl font-bold text-center mb-8">How It Works</h2>
+                    <h2 className="text-3xl font-bold text-center mb-8">{t('landingHowItWorksTitle')}</h2>
                     <div className="grid md:grid-cols-3 gap-8">
                         <div className="text-center">
                             <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                                 1
                             </div>
-                            <h3 className="font-semibold mb-2">Create a Project</h3>
+                            <h3 className="font-semibold mb-2">{t('landingHowItWorksStep1Title')}</h3>
                             <p className="text-gray-600">
-                                Set up your delivery project and import stops from addresses
+                                {t('landingHowItWorksStep1Desc')}
                             </p>
                         </div>
                         <div className="text-center">
                             <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                                 2
                             </div>
-                            <h3 className="font-semibold mb-2">Plan Routes</h3>
+                            <h3 className="font-semibold mb-2">{t('landingHowItWorksStep2Title')}</h3>
                             <p className="text-gray-600">
-                                Drag and drop stops to create routes and assign them to teams
+                                {t('landingHowItWorksStep2Desc')}
                             </p>
                         </div>
                         <div className="text-center">
                             <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                                 3
                             </div>
-                            <h3 className="font-semibold mb-2">Execute & Track</h3>
+                            <h3 className="font-semibold mb-2">{t('landingHowItWorksStep3Title')}</h3>
                             <p className="text-gray-600">
-                                Teams complete deliveries and update statuses in real-time
+                                {t('landingHowItWorksStep3Desc')}
                             </p>
                         </div>
                     </div>
@@ -144,8 +144,8 @@ const LandingPage: React.FC = () => {
                 {/* CTA Section */}
                 {!user && (
                     <div className="text-center">
-                        <h2 className="text-2xl font-bold mb-4">Ready to optimize your routes?</h2>
-                        <p className="text-gray-600 mb-6">Sign in with your Google account to get started</p>
+                        <h2 className="text-2xl font-bold mb-4">{t('landingCtaTitle')}</h2>
+                        <p className="text-gray-600 mb-6">{t('landingCtaSubtitle')}</p>
                         <button
                             onClick={login}
                             className="inline-flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
@@ -168,7 +168,7 @@ const LandingPage: React.FC = () => {
                                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                                 />
                             </svg>
-                            Sign in with Google
+                            {t('landingCtaButton')}
                         </button>
                     </div>
                 )}
@@ -177,7 +177,7 @@ const LandingPage: React.FC = () => {
             {/* Footer */}
             <footer className="border-t border-gray-200 py-8">
                 <div className="container mx-auto px-4 text-center text-gray-600">
-                    <p>&copy; {new Date().getFullYear()} RouteScout. All rights reserved.</p>
+                    <p>{t('landingFooterCopyright', { year: new Date().getFullYear() })}</p>
                 </div>
             </footer>
         </div>

@@ -22,10 +22,12 @@ function PaymentsPage() {
     }
 
     return (
-        <div className="flex flex-col gap-8">
-            <h1 className="text-2xl font-bold">{t('paymentsTitle')}</h1>
-            <PaymentsTable payments={payments} onAction={handleAction} />
-            <PaymentImporter onUploaded={populatePayments} />
+        <div className="flex flex-col gap-8 p-4 h-full overflow-hidden">
+            <h1 className="text-2xl font-bold flex-shrink-0">{t('paymentsTitle')}</h1>
+            <div className="flex-1 overflow-y-auto">
+                <PaymentsTable payments={payments} onAction={handleAction} />
+                <PaymentImporter onUploaded={populatePayments} />
+            </div>
         </div>
     );
 

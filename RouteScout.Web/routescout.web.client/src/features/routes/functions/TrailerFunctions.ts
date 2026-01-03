@@ -1,7 +1,7 @@
 // Trailer capacity constants
-export const TRAILER_CAPACITY_SMALL = 3;
-export const TRAILER_CAPACITY_LARGE = 6;
-export const TRAILER_CAPACITY_BOOGIE = 9;
+export const TRAILER_CAPACITY_SMALL = 8;
+export const TRAILER_CAPACITY_LARGE = 12;
+export const TRAILER_CAPACITY_BOOGIE = 16;
 export function getTrailerCapacity(size?: string | null) {
     switch ((size || '').toLowerCase()) {
         case 'small': return TRAILER_CAPACITY_SMALL;

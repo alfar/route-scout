@@ -80,7 +80,7 @@ export const useDragHandlers = ({ projectId, routes, stops, teams, setTeams }: D
         const createRes = await fetch(`/api/projects/${projectId}/routes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ areaId: selected[0].areaId, areaName: selected[0].areaName, dropOffPoint: 'Almindsøhytten' })
+            body: JSON.stringify({ areaId: selected[0].areaId, areaName: selected[0].areaName, dropOffPoint: 'AlmindsÃ¸hytten' })
         });
         const routeId = await createRes.json();
         if (!routeId) return;
@@ -96,7 +96,7 @@ export const useDragHandlers = ({ projectId, routes, stops, teams, setTeams }: D
         const createRes = await fetch(`/api/projects/${projectId}/routes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ areaId: selected[0].areaId, areaName: selected[0].areaName, dropOffPoint: 'Almindsøhytten' })
+            body: JSON.stringify({ areaId: selected[0].areaId, areaName: selected[0].areaName, dropOffPoint: 'AlmindsÃ¸hytten' })
         });
         const routeId = await createRes.json();
         if (!routeId) return;

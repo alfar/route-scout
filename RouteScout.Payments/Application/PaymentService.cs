@@ -29,7 +29,7 @@ public class PaymentService
         using var csv = new CsvHelper.CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture)
         {
             HasHeaderRecord = true,
-            Delimiter = ","
+            Delimiter = ";"
         });
 
         // Read the first header row (English)
@@ -50,18 +50,15 @@ public class PaymentService
 
             // Amount parsing
             decimal amount;
-            if (!csv.TryGetField("Amount", out amount))
+            var rawAmount = (csv.GetField("Amount") ?? "0");
+            rawAmount = new string(rawAmount.Where(c => char.IsDigit(c) || c == '.' || c == ',' || c == '-').ToArray());
+            // Try with invariant, then with current culture
+            if (!decimal.TryParse(rawAmount, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.CurrentCulture, out amount))
             {
-                var rawAmount = csv.GetField("Amount") ?? "0";
-                rawAmount = new string(rawAmount.Where(c => char.IsDigit(c) || c == '.' || c == ',' || c == '-').ToArray());
-                // Try with invariant, then with current culture
                 if (!decimal.TryParse(rawAmount, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out amount))
                 {
-                    if (!decimal.TryParse(rawAmount, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.CurrentCulture, out amount))
-                    {
-                        // Skip if cannot parse amount
-                        continue;
-                    }
+                    // Skip if cannot parse amount
+                    continue;
                 }
             }
 

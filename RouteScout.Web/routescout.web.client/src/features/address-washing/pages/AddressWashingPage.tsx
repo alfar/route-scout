@@ -39,9 +39,11 @@ function AddressWashingPage() {
     }
 
     return (
-        <div className="flex flex-col p-3 lg:p-4 overscroll-contain gap-2">
-            <h1 className="text-2xl font-bold mb-3">{t('addressCandidatesTitle')}</h1>
-            <AddressCandidatesTable candidates={candidates} onReject={handleReject} onConfirm={handleConfirm} onSelectAddress={handleSelectAddress} />
+        <div className="flex flex-col gap-4 p-4 h-full overflow-hidden">
+            <h1 className="text-2xl font-bold flex-shrink-0">{t('addressCandidatesTitle')}</h1>
+            <div className="flex-1 overflow-y-auto">
+                <AddressCandidatesTable candidates={candidates} onReject={handleReject} onConfirm={handleConfirm} onSelectAddress={handleSelectAddress} />
+            </div>
         </div>
     );
 }

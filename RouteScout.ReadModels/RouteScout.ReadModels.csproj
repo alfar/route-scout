@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Marten" Version="8.17.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RouteScout.AddressWashing\RouteScout.AddressWashing.csproj" />
+    <ProjectReference Include="..\RouteScout.Payments\RouteScout.Payments.csproj" />
+    <ProjectReference Include="..\RouteScout.StreetCatalog\RouteScout.StreetCatalog.csproj" />
+  </ItemGroup>
+
+</Project>

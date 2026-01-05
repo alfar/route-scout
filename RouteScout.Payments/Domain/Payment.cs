@@ -49,12 +49,12 @@ public class Payment
     public IEnumerable<object> Confirm()
     {
         if (Confirmed) yield break;
-        yield return new PaymentConfirmed(Id);
+        yield return new PaymentConfirmed(Id, ProjectId);
     }
 
     public IEnumerable<object> Reject()
     {
         if (Rejected) yield break;
-        yield return new PaymentRejected(Id);
+        yield return new PaymentRejected(Id, ProjectId);
     }
 }

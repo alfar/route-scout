@@ -1,3 +1,5 @@
-﻿namespace RouteScout.Payments.Domain.Events;
+﻿using RouteScout.Contracts;
 
-public record PaymentConfirmed(Guid PaymentId);
+namespace RouteScout.Payments.Domain.Events;
+
+public record PaymentConfirmed(Guid PaymentId, Guid ProjectId) : IProjectEvent;

@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using RouteScout.Contracts;
+using RouteScout.ReadModels.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -184,6 +185,7 @@ builder.Services.AddMarten(opts =>
     opts.AddProjectsEventTypesAndProjections();
     opts.AddRoutesEventTypesAndProjections();
     opts.AddTeamsEventTypesAndProjections();
+    opts.AddReadModelsEventTypesAndProjections();
 
     // Add subscriptions
 
@@ -226,7 +228,8 @@ app.MapGroup("/api/projects/{projectId:guid}")
     .MapAddressWashingEndpoints()
     .MapPaymentEndpoints()
     .MapRouteEndpoints()
-    .MapTeamEndpoints();
+    .MapTeamEndpoints()
+    .MapReadModelsEndpoints();
 
 // Project management endpoints (not scoped by projectId)
 // StreetCatalog and Stream endpoints don't need project scoping
